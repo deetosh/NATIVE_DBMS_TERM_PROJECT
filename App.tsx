@@ -17,7 +17,7 @@ const requestLocationPermission = async (): Promise<boolean> => {
         buttonPositive: 'OK',
         buttonNegative: 'Cancel',
         buttonNeutral: 'Ask Me Later',
-      }git
+      }
     );
 
     return granted === PermissionsAndroid.RESULTS.GRANTED;
