@@ -21,7 +21,7 @@ export const callAPI = async (
       params: params || undefined,
       headers: token ? { "x-access-token": token } : {},
     };
-
+    console.log("API Config:", config);
     const response = await axios(config);
     const data = response.data;
 
