@@ -1,112 +1,29 @@
 
 import React, { useEffect } from 'react';
-import Geolocation, { GeoPosition, GeoError } from 'react-native-geolocation-service';
-import { Platform, PermissionsAndroid, Alert, Button } from 'react-native';
-import {SafeAreaView, StyleSheet, View} from 'react-native';
-import MapView, {Marker} from 'react-native-maps';
+import {SafeAreaView} from 'react-native';
 import { useState } from 'react';
+import MainContainer from './src/modules/MainContainer';
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import LoginScreen from './src/modules/screens/LoginScreen';
+import RegisterScreen from './src/modules/screens/RegisterScreen';
+const Stack = createStackNavigator();
 
 
-const requestLocationPermission = async (): Promise<boolean> => {
-  if (Platform.OS === 'android') {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: 'Location Access Required',
-        message: 'This app needs access to your location to function correctly.',
-        buttonPositive: 'OK',
-        buttonNegative: 'Cancel',
-        buttonNeutral: 'Ask Me Later',
-      }
-    );
 
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  }
-  return false;
-};
 
 const App = () => {
-  const [location, setLocation] = useState<GeoPosition | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-    const getLocation = async () => {
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        setErrorMsg('Location permission denied.');
-        Alert.alert(
-          'Permission Denied',
-          'You need to enable location permissions in settings to use this feature.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Geolocation.getCurrentPosition(
-      //   (position: GeoPosition) => {
-      //     console.log(position);
-      //     setLocation(position);
-      //     setErrorMsg(null);
-      //   },
-      //   (error: GeoError) => {
-      //     console.log(error.code, error.message);
-      //     setErrorMsg(`Error: ${error.message}`);
-      //     setLocation(null);
-      //   },
-      //   { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
-      // );
-    };
-
-  useEffect(() => {
-    try {
-      getLocation();
-    } catch (error) {
-      console.error('Error getting location:', error);
-    }
-    
-  }, []);
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-        <MapView
-          style={styles.mapStyle}
-          showsUserLocation={true}
-          followsUserLocation={true}
-          >
-          <Marker
-            draggable
-            coordinate={{
-              latitude: 27.78825,
-              longitude: 87.4324,
-            }}
-            onDragEnd={
-              (e) => console.log(JSON.stringify(e.nativeEvent.coordinate))
-            }
-            title={'Test Marker'}
-            description={'This is a description of the marker'}
-          />
-        </MapView>
-      </View>
+      <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false,animation:'fade_from_bottom' }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Main" component={MainContainer} options={{ gestureEnabled: false }} />
+      </Stack.Navigator>
+    </NavigationContainer>
     </SafeAreaView>
   );
 };
 export default App;
- 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  mapStyle: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-});
