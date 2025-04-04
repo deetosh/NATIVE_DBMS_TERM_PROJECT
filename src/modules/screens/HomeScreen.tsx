@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, Button, PermissionsAndroid, Platform } from 'react-native';
 import { io } from 'socket.io-client';
 import Geolocation from '@react-native-community/geolocation';
+import { BACKEND_URL } from '../../secret';
 
-const socket = io('http://10.145.195.150:8000');
+
 
 const requestLocationPermission = async () => {
   if (Platform.OS === 'android') {
@@ -32,7 +33,9 @@ const HomeScreen: React.FC = () => {
   const watchId = useRef<number | null>(null);
 
   useEffect(() => {
+
     const startTracking = async () => {
+      const socket = io(`${BACKEND_URL}`);
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         console.warn('Location permission denied');
@@ -58,7 +61,7 @@ const HomeScreen: React.FC = () => {
         },
         {
           enableHighAccuracy: true,
-          distanceFilter: 1,
+          distanceFilter: 5,
           timeout: 10000,
           maximumAge: 0,
         }

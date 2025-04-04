@@ -1,27 +1,61 @@
-import React from 'react';
-import {SafeAreaView, StyleSheet, View} from 'react-native';
-import MapView, {Marker} from 'react-native-maps';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import io from 'socket.io-client';
+import { BACKEND_URL } from '../../secret';
+
+type BusLocation = {
+  bus_id: string;
+  bus_no: string;
+  latitude: number;
+  longitude: number;
+};
 
 const MapScreen: React.FC = () => {
+  const [busLocations, setBusLocations] = useState<Record<string, BusLocation>>({});
+
+  useEffect(() => {
+    const socket = io(`${BACKEND_URL}`); // Replace with your backend URL
+
+    socket.on("connect", () => {
+      console.log("Connected to socket server");
+    });
+
+    socket.on("bus:locationUpdate", (data: BusLocation) => {
+      setBusLocations((prev) => ({
+        ...prev,
+        [data.bus_id]: data, // Update each bus by its unique ID
+      }));
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from socket server");
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <MapView
           style={styles.mapStyle}
           showsUserLocation={true}
-          followsUserLocation={true}>
-          <Marker
-            draggable
-            coordinate={{
-              latitude: 27.78825,
-              longitude: 87.4324,
-            }}
-            onDragEnd={e =>
-              console.log(JSON.stringify(e.nativeEvent.coordinate))
-            }
-            title={'Test Marker'}
-            description={'This is a description of the marker'}
-          />
+          followsUserLocation={true}
+        >
+          {Object.values(busLocations).map((bus) => (
+            <Marker
+              key={bus.bus_id}
+              coordinate={{
+                latitude: bus.latitude,
+                longitude: bus.longitude,
+              }}
+              title={`Bus ${bus.bus_no}`}
+              description={`Bus ID: ${bus.bus_id}`}
+            />
+          ))}
         </MapView>
       </View>
     </SafeAreaView>
@@ -32,19 +66,11 @@ export default MapScreen;
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   mapStyle: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
   },
 });

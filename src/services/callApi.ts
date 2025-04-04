@@ -1,6 +1,7 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+import { BACKEND_URL } from "../secret";
 
 export const callAPI = async (
   URL: string,
@@ -9,7 +10,7 @@ export const callAPI = async (
   params: any = null
 ) => {
   try {
-    const base_url = "http://10.145.195.150:8000/api/v1";
+    const base_url = `${BACKEND_URL}/api/v1`;
 
     // Get token from AsyncStorage
     const token = await AsyncStorage.getItem("accessToken") ?? '';

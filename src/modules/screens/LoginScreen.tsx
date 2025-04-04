@@ -82,7 +82,7 @@ const LoginScreen = ({navigation}: any) => {
     if (!response.isError) {
       Toast.show({
         type: 'success',
-        text1: 'Registration Successful',
+        text1: 'Login Successful',
         text2: response.message,
       });
       // store access token in local storage
@@ -92,7 +92,7 @@ const LoginScreen = ({navigation}: any) => {
     } else {
       Toast.show({
         type: "error",
-        text1: "Registration Failed",
+        text1: "Login Failed",
         text2: response.message,
       });
       // console.error(response.message);

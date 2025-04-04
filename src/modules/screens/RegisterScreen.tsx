@@ -96,7 +96,7 @@ const RegisterScreen = ({ navigation }: any) => {
 
       <View style={styles.pickerContainer}>
       <Ionicons name="man-outline" size={20} color="white" style={styles.icon} />
-      <Picker selectedValue={role} onValueChange={(itemValue) => setRole(itemValue)} mode="dropdown" style={styles.picker}>
+      <Picker selectedValue={role} onValueChange={(itemValue) => setRole(itemValue)} mode="dropdown" style={styles.picker} dropdownIconColor={COLOR.text_primary}>
         <Picker.Item label="Select Role" value="" color="grey" /> 
         <Picker.Item label="User" value="user"/>
         <Picker.Item label="Driver" value="driver"/>
