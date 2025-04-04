@@ -80,6 +80,9 @@ const LoginScreen = ({navigation}: any) => {
     const response = await callAPI('/auth/login', 'POST', payload);
     setIsLoading(false);
     console.log('API Response:', response);
+    
+    setEmail('');
+    setPassword('');
     if (!response.isError) {
       Toast.show({
         type: 'success',

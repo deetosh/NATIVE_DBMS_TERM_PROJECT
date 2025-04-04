@@ -1,5 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 
 export const callAPI = async (
   URL: string,
@@ -38,6 +39,7 @@ export const callAPI = async (
     };
   } catch (error: any) {
     // console.error("Error:", error);
+    Alert.alert('Error','Something went wrong');
 
     if (error.response?.status === 401) {
       console.log("Unauthorized");

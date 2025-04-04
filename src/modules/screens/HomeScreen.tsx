@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, Button, PermissionsAndroid, Platform } from 'react-native';
 import { io } from 'socket.io-client';
-import GetLocation from 'react-native-get-location';
+import Geolocation from '@react-native-community/geolocation';
 
 const socket = io('http://10.145.195.150:8000');
 
@@ -28,58 +28,65 @@ const requestLocationPermission = async () => {
 };
 
 const HomeScreen: React.FC = () => {
-  const [tracking, setTracking] = useState<boolean>(false);
+  const [tracking, setTracking] = useState(false);
+  const watchId = useRef<number | null>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    const fetchLocation = async () => {
+    const startTracking = async () => {
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         console.warn('Location permission denied');
         return;
       }
 
-      try {
-        const location = await GetLocation.getCurrentPosition({
+      console.log('Location permission granted');
+
+      watchId.current = Geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          console.log('Latitude:', latitude, 'Longitude:', longitude);
+
+          socket.emit('driver:locationUpdate', {
+            bus_id: '1234',
+            bus_no: 'B-100',
+            latitude,
+            longitude,
+          });
+        },
+        (error) => {
+          console.warn('WatchPosition Error:', error);
+        },
+        {
           enableHighAccuracy: true,
+          distanceFilter: 1,
           timeout: 10000,
-        });
+          maximumAge: 0,
+        }
+      );
+    };
 
-        console.log('Latitude:', location.latitude, 'Longitude:', location.longitude);
-
-        socket.emit('driver:locationUpdate', {
-          bus_id: '1234',
-          bus_no: 'B-100',
-          latitude: location.latitude,
-          longitude: location.longitude,
-        });
-
-      } catch (error) {
-        console.warn('Location Error:', error);
+    const stopTracking = () => {
+      if (watchId.current !== null) {
+        Geolocation.clearWatch(watchId.current);
+        watchId.current = null;
       }
     };
 
     if (tracking) {
-      fetchLocation(); // Get the first location immediately
-      interval = setInterval(fetchLocation, 6000); // Update every 3 seconds
+      startTracking();
     } else {
-      if (interval) {
-        clearInterval(interval);
-      }
+      stopTracking();
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      stopTracking();
     };
   }, [tracking]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Driver Tracking</Text>
-      <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking(!tracking)} />
+      <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking((prev) => !prev)} />
     </View>
   );
 };
