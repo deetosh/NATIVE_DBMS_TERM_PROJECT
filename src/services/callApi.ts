@@ -38,8 +38,6 @@ export const callAPI = async (
       isError: data?.error || false,
     };
   } catch (error: any) {
-    // console.error("Error:", error);
-    Alert.alert('Error','Something went wrong');
 
     if (error.response?.status === 401) {
       console.log("Unauthorized");

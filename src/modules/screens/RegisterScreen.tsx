@@ -61,12 +61,11 @@ const RegisterScreen = ({ navigation }: any) => {
       navigation.navigate("Login");
     }
     else{
-      // Toast.show({
-      //   type: "error",
-      //   text1: "Registration Failed",
-      //   // text2: response.message,
-      // });
-      console.error(response.message);
+      Toast.show({
+        type: "error",
+        text1: "Registration Failed",
+        text2: response.message,
+      });
     }
   };
 

@@ -12,10 +12,6 @@ import {COLOR} from '../../constants';
 import {callAPI} from '../../services/callApi';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Geolocation, {
-  GeoPosition,
-  GeoError,
-} from 'react-native-geolocation-service';
 import {Platform, PermissionsAndroid} from 'react-native';
 import Loader from '../../molecules/Loader';
 
@@ -94,12 +90,12 @@ const LoginScreen = ({navigation}: any) => {
       AsyncStorage.setItem('role', response.data.user.role);
       navigation.navigate('Main');
     } else {
-      // Toast.show({
-      //   type: "error",
-      //   text1: "Registration Failed",
-      //   // text2: response.message,
-      // });
-      console.error(response.message);
+      Toast.show({
+        type: "error",
+        text1: "Registration Failed",
+        text2: response.message,
+      });
+      // console.error(response.message);
     }
   };
 

@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import LoginScreen from './src/modules/screens/LoginScreen';
 import RegisterScreen from './src/modules/screens/RegisterScreen';
+import Toast from 'react-native-toast-message';
 const Stack = createStackNavigator();
 
 
@@ -23,6 +24,7 @@ const App = () => {
         <Stack.Screen name="Main" component={MainContainer} options={{ gestureEnabled: false }} />
       </Stack.Navigator>
     </NavigationContainer>
+    <Toast position='bottom'/>
     </SafeAreaView>
   );
 };
