@@ -8,7 +8,10 @@ const ProfileScreen: React.FC = ({navigation}: any) => {
     // clear local storage
     await AsyncStorage.clear();
     // navigate to login screen
-    navigation.navigate('Login');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
   return (
     <View style={styles.container}>

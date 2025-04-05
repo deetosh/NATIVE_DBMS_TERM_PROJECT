@@ -97,10 +97,10 @@ const RegisterScreen = ({ navigation }: any) => {
       <View style={styles.pickerContainer}>
       <Ionicons name="man-outline" size={20} color="white" style={styles.icon} />
       <Picker selectedValue={role} onValueChange={(itemValue) => setRole(itemValue)} mode="dropdown" style={styles.picker} dropdownIconColor={COLOR.text_primary}>
-        <Picker.Item label="Select Role" value="" color="grey" /> 
-        <Picker.Item label="User" value="user"/>
-        <Picker.Item label="Driver" value="driver"/>
-        <Picker.Item label="Admin" value="admin"/>
+        <Picker.Item label="Select Role" value="" color="grey" style={styles.pickerLabel} /> 
+        <Picker.Item label="User" value="user" style={styles.pickerLabel}/>
+        <Picker.Item label="Driver" value="driver" style={styles.pickerLabel}/>
+        <Picker.Item label="Admin" value="admin" style={styles.pickerLabel}/>
       </Picker>
       </View>
 
@@ -138,5 +138,9 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLOR.text_secondary,
     fontSize: 18,
+  },
+  pickerLabel : {
+    backgroundColor: COLOR.bg_secondary,
+    color: COLOR.text_secondary,
   }
 });

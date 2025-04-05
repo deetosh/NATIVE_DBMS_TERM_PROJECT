@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Modal, ActivityIndicator, StyleSheet } from "react-native";
+import { COLOR } from "../constants";
 
 interface LoaderProps {
   visible: boolean;
@@ -10,7 +11,7 @@ const Loader: React.FC<LoaderProps> = ({ visible }) => {
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.overlay}>
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#007bff" />
+          <ActivityIndicator size={70} color={COLOR.text_primary}/>
         </View>
       </View>
     </Modal>
@@ -27,7 +28,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loaderContainer: {
-    backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
   },
