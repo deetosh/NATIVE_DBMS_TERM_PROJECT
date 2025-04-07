@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {COLOR, initialRegionMap} from '../../constants';
 import Toast from 'react-native-toast-message';
 import { callAPI } from '../../services/callApi';
+import Loader from '../../molecules/Loader';
 
 const {width} = Dimensions.get('window');
 
@@ -22,11 +23,18 @@ interface Coordinate {
   longitude: number;
 }
 
+interface Location {
+  name: string;
+  coordinates: number[];
+}
+
 const AddLocationScreen: React.FC = () => {
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [placeName, setPlaceName] = useState<string>('');
   const [selectedCoordinate, setSelectedCoordinate] =
     useState<Coordinate | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
 
   const handleMapPress = (e: MapPressEvent) => {
     if (isAdding) {
@@ -61,6 +69,16 @@ const AddLocationScreen: React.FC = () => {
           text1: 'Success',
           text2: 'Location added successfully.',
         });
+        setAllLocations((prevLocations) => [
+          ...prevLocations,
+          {
+            name: placeName,
+            coordinates: [
+              selectedCoordinate.latitude,
+              selectedCoordinate.longitude,
+            ],
+          },
+        ]);
         setPlaceName('');
         setSelectedCoordinate(null);
         setIsAdding(false);
@@ -92,10 +110,38 @@ const AddLocationScreen: React.FC = () => {
     setSelectedCoordinate(null);
   };
 
+  useEffect(()=> {
+    const fetchLocations = async () => {
+      try {
+        setIsLoading(true);
+        const response = await callAPI('/location/get', "GET");
+        if (!response.isError) {
+          setAllLocations(response.data);
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Failed to fetch locations. Please try again.',
+          });
+        }
+        setIsLoading(false);
+      } catch (error) {
+        setIsLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to fetch locations. Please try again.',
+        });
+      }
+    };
+    fetchLocations();
+  },[])
+
   const initialRegion: Region = initialRegionMap;
 
   return (
     <SafeAreaView style={styles.container}>
+      <Loader visible={isLoading} />
       <View style={styles.container}>
         <MapView
           style={styles.map}
@@ -103,6 +149,17 @@ const AddLocationScreen: React.FC = () => {
           initialRegion={initialRegion}
           onPress={handleMapPress}>
           {selectedCoordinate && <Marker coordinate={selectedCoordinate} />}
+          {allLocations.map((location, index) => (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: location.coordinates[0],
+                longitude: location.coordinates[1],
+              }}
+              title={location.name}
+              pinColor='blue'
+            />
+          ))}
         </MapView>
 
         {!isAdding && (
@@ -121,10 +178,11 @@ const AddLocationScreen: React.FC = () => {
               value={placeName}
               onChangeText={setPlaceName}
               placeholderTextColor="gray"
+              autoFocus={true}
             />
             <TextInput
               style={styles.disabledtextInput}
-              placeholder="Select a point on map"
+              placeholder="Select a point on map (Latitude)"
               value={
                 selectedCoordinate?.latitude
                   ? `${selectedCoordinate.latitude}`
@@ -136,7 +194,7 @@ const AddLocationScreen: React.FC = () => {
             />
             <TextInput
               style={styles.disabledtextInput}
-              placeholder="Select a point on map"
+              placeholder="Select a point on map (Longitude)"
               value={
                 selectedCoordinate?.longitude
                   ? `${selectedCoordinate.longitude}`
@@ -190,29 +248,31 @@ const styles = StyleSheet.create({
   inputContainer: {
     position: 'absolute',
     // bottom: 0,
+    top: 0,
     width: '100%',
     padding: 20,
-    backgroundColor: COLOR.bg_secondary,
+    backgroundColor: COLOR.bg_primary,
   },
   textInput: {
-    height: 50,
+    height: 45,
     borderColor: COLOR.text_secondary,
     borderWidth: 1,
     paddingHorizontal: 10,
     borderRadius: 5,
     marginBottom: 10,
     color: COLOR.text_primary,
-    fontSize: 18,
+    fontSize: 16,
   },
   disabledtextInput: {
-    height: 50,
+    height: 45,
     borderColor: COLOR.text_secondary,
+    backgroundColor: COLOR.bg_secondary,
     borderWidth: 1,
     paddingHorizontal: 10,
     borderRadius: 5,
     marginBottom: 10,
     color: COLOR.text_primary,
-    fontSize: 18,
+    fontSize: 16,
   },
   submitButton: {
     backgroundColor: COLOR.btn_primary,

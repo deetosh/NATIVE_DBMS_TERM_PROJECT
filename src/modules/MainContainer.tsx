@@ -106,6 +106,7 @@ const MainContainer = () => {
               paddingBottom: insets.bottom,
               // height: 60,
             },
+            headerShown: false,
             headerStyle: {
               backgroundColor: COLOR.bg_secondary,
               elevation: 0,
