@@ -3,6 +3,8 @@ import { View, Text, Button, PermissionsAndroid, Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import Geolocation from '@react-native-community/geolocation';
 import { BACKEND_URL } from '../../secret';
+import { callAPI } from '../../services/callApi';
+import Loader from '../../molecules/Loader';
 
 
 
@@ -32,6 +34,8 @@ const HomeScreen: React.FC = () => {
   const [tracking, setTracking] = useState(false);
   const watchId = useRef<number | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const [BusDetails, setBusDetails] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
 
@@ -53,8 +57,8 @@ const HomeScreen: React.FC = () => {
           console.log('Latitude:', latitude, 'Longitude:', longitude);
 
           socketRef.current?.emit('driver:locationUpdate', {
-            bus_id: '1234',
-            bus_no: 'B-100',
+            bus_id: BusDetails.bus_id,
+            bus_no: BusDetails.bus_no,
             latitude,
             longitude,
           });
@@ -94,11 +98,43 @@ const HomeScreen: React.FC = () => {
     };
   }, [tracking]);
 
+  useEffect(()=> {
+    const fetchBusDetails = async () => {
+      try {
+        setIsLoading(true);
+        const response = await callAPI(`/bus/getByDriver`,"GET");
+        const data = response.data;
+        setBusDetails({
+          bus_no: data.bus_number,
+          bus_id: data._id,
+        })
+        setIsLoading(false);
+        console.log('Bus Details:', data);
+      } catch (error) {
+        setIsLoading(false);
+        console.error('Error fetching bus details:', error);
+      }
+    }
+
+    fetchBusDetails();
+  },[])
+
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Driver Tracking</Text>
-      <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking((prev) => !prev)} />
-    </View>
+    <>
+    {isLoading && <Loader visible={isLoading} />}
+    {!isLoading && ( BusDetails ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Driver Tracking</Text>
+        <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking((prev) => !prev)} />
+      </View>
+    ) : (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Please register with a bus</Text>
+      </View>
+    ))}
+    </>
+    
   );
 };
 
