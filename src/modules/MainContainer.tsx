@@ -12,6 +12,7 @@ import Loader from '../molecules/Loader';
 import AddLocationScreen from './screens/AddLocationScreen';
 import AddBusScreen from './screens/AddBusScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Screen name
 const HOME_SCREEN = 'Home';
@@ -23,9 +24,12 @@ const PROFILE_SCREEN = 'Profile';
 
 const Tab = createBottomTabNavigator();
 
+
 const MainContainer = () => {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
+
   useEffect(() => {
     const fetchRole = async () => {
       try {
@@ -96,8 +100,11 @@ const MainContainer = () => {
               right: 0,
               elevation: 0,
               backgroundColor: COLOR.bg_secondary,
+              // backgroundColor: 'transparent',
               borderTopWidth: 0,
-              height: 60,
+              height: 60 + insets.bottom,
+              paddingBottom: insets.bottom,
+              // height: 60,
             },
             headerStyle: {
               backgroundColor: COLOR.bg_secondary,

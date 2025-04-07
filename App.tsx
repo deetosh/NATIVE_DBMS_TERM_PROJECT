@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import LoginScreen from './src/modules/screens/LoginScreen';
 import RegisterScreen from './src/modules/screens/RegisterScreen';
 import Toast from 'react-native-toast-message';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 const Stack = createStackNavigator();
 
 
@@ -16,7 +17,7 @@ const Stack = createStackNavigator();
 const App = () => {
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaProvider style={{flex: 1}}>
       <NavigationContainer>
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false,animation:'fade_from_bottom' }}>
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -25,7 +26,7 @@ const App = () => {
       </Stack.Navigator>
     </NavigationContainer>
     <Toast position='bottom'/>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 export default App;
