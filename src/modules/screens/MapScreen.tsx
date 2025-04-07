@@ -61,11 +61,11 @@ const MapScreen: React.FC = () => {
         },
         error => {
           console.error('Error getting location', error);
-          Toast.show({
-            type: 'error',
-            text1: 'Location Error',
-            text2: 'Unable to fetch location. Please check your settings.',
-          });
+          // Toast.show({
+          //   type: 'error',
+          //   text1: 'Location Error',
+          //   text2: 'Unable to fetch location. Please check your settings.',
+          // });
           setIsLoading(false);
         },
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
@@ -114,7 +114,7 @@ const MapScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      <Loader visible={isLoading} />
+      {/* <Loader visible={isLoading} /> */}
       <View style={styles.container}>
         <MapView
           style={styles.mapStyle}
