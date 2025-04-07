@@ -88,6 +88,8 @@ const LoginScreen = ({navigation}: any) => {
       // store access token in local storage
       AsyncStorage.setItem('accessToken', response.data.access_token);
       AsyncStorage.setItem('role', response.data.user.role);
+      AsyncStorage.setItem('name', response.data.user.username);
+      AsyncStorage.setItem('email', response.data.user.email);
       navigation.navigate('Main');
     } else {
       Toast.show({
