@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Button, PermissionsAndroid, Platform } from 'react-native';
+import { View, Text, Button, PermissionsAndroid, Platform, StyleSheet } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import Geolocation from '@react-native-community/geolocation';
 import { BACKEND_URL } from '../../secret';
 import { callAPI } from '../../services/callApi';
 import Loader from '../../molecules/Loader';
+import { Picker } from '@react-native-picker/picker';
 
 
 
@@ -34,9 +35,10 @@ const HomeScreen: React.FC = () => {
   const [tracking, setTracking] = useState(false);
   const watchId = useRef<number | null>(null);
   const socketRef = useRef<Socket | null>(null);
-  const [BusDetails, setBusDetails] = useState<any>(null);
+  const [busData, setBusData] = useState([]);
+  const [busId, setBusId] = useState({ _id: '', bus_number: '' });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [trackingPerm,setTrackingPerm] = useState(false);
   useEffect(() => {
 
     const startTracking = async () => {
@@ -57,8 +59,8 @@ const HomeScreen: React.FC = () => {
           console.log('Latitude:', latitude, 'Longitude:', longitude);
 
           socketRef.current?.emit('driver:locationUpdate', {
-            bus_id: BusDetails.bus_id,
-            bus_no: BusDetails.bus_no,
+            bus_id: busId._id,
+            bus_no: busId.bus_number,
             latitude,
             longitude,
           });
@@ -85,6 +87,8 @@ const HomeScreen: React.FC = () => {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
+      // setBusId({ _id: '', bus_number: '' });
+      // setTrackingPerm(false);
     };
 
     if (tracking) {
@@ -99,15 +103,12 @@ const HomeScreen: React.FC = () => {
   }, [tracking]);
 
   useEffect(()=> {
-    const fetchBusDetails = async () => {
+    const fetchBus= async () => {
       try {
         setIsLoading(true);
-        const response = await callAPI(`/bus/getByDriver`,"GET");
+        const response = await callAPI(`/bus/get`,"GET",{},{flag:true});
         const data = response.data;
-        setBusDetails({
-          bus_no: data.bus_number,
-          bus_id: data._id,
-        })
+        setBusData(data);
         setIsLoading(false);
         console.log('Bus Details:', data);
       } catch (error) {
@@ -116,21 +117,44 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    fetchBusDetails();
-  },[])
+    fetchBus();
+  },[]);
 
+  const handlePickerChange = (selectedId: any) => {
+    // Find the selected bus object by matching the _id.
+    const bus = busData.find((b:any) => b._id === selectedId);
+    if (bus) {
+      setBusId(bus);
+      setTrackingPerm(true);
+    }
+  };
 
   return (
     <>
-    {isLoading && <Loader visible={isLoading} />}
-    {!isLoading && ( BusDetails ? (
+    {isLoading && <Loader visible={isLoading} />}    
+    <Text style={styles.title}>Select a Bus</Text>
+      <Picker
+        selectedValue={busId._id}
+        onValueChange={(itemValue, itemIndex) => handlePickerChange(itemValue)}
+        style={styles.picker}
+      >
+        {busData.map((bus:any) => (
+          <Picker.Item 
+            label={bus.bus_number} 
+            value={bus._id} 
+            key={bus._id} 
+          />
+        ))}
+      </Picker>
+      
+    {!isLoading && ( trackingPerm ? (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Driver Tracking</Text>
         <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking((prev) => !prev)} />
       </View>
     ) : (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Please register with a bus</Text>
+        <Text>Please select a bus you are gonna drive</Text>
       </View>
     ))}
     </>
@@ -138,4 +162,23 @@ const HomeScreen: React.FC = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+  },
+  selectedText: {
+    marginTop: 20,
+    fontSize: 16,
+  },
+});
 export default HomeScreen;
