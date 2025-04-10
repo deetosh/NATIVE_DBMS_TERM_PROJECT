@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Button, PermissionsAndroid, Platform, StyleSheet } from 'react-native';
+import { View, Text, Button, PermissionsAndroid, Platform, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import Geolocation from '@react-native-community/geolocation';
 import { BACKEND_URL } from '../../secret';
 import { callAPI } from '../../services/callApi';
 import Loader from '../../molecules/Loader';
 import { Picker } from '@react-native-picker/picker';
+import { COLOR } from '../../constants';
 
 
 
@@ -126,38 +127,45 @@ const HomeScreen: React.FC = () => {
     if (bus) {
       setBusId(bus);
       setTrackingPerm(true);
+      // setIsLoading(true);
+      // const response = callAPI(`/bus/assignDriver`,"POST",{busId:busId._id},{});
+      // setIsLoading(false);
     }
   };
 
   return (
-    <>
+    <SafeAreaView style={styles.container}>
     {isLoading && <Loader visible={isLoading} />}    
     <Text style={styles.title}>Select a Bus</Text>
+    <View style={!busId._id ? styles.pickerContainer : styles.pickerContainerSelected}>
       <Picker
         selectedValue={busId._id}
         onValueChange={(itemValue, itemIndex) => handlePickerChange(itemValue)}
-        style={styles.picker}
+        style={!busId._id?styles.picker:styles.selectedText}
       >
         {busData.map((bus:any) => (
           <Picker.Item 
+            style={styles.item}
             label={bus.bus_number} 
             value={bus._id} 
             key={bus._id} 
           />
         ))}
       </Picker>
-      
+      </View>
     {!isLoading && ( trackingPerm ? (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Driver Tracking</Text>
-        <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking((prev) => !prev)} />
+        <Text style={styles.title}>Driver Tracking</Text>
+        <TouchableOpacity style={styles.button} onPress={() => setTracking((prev) => !prev)} >
+          <Text style={styles.text}>{tracking ? 'Stop Tracking' : 'Start Tracking'}</Text>
+          </TouchableOpacity>
       </View>
     ) : (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Please select a bus you are gonna drive</Text>
+        <Text style={styles.title}>Please select a bus you are gonna drive</Text>
       </View>
     ))}
-    </>
+    </SafeAreaView>
     
   );
 };
@@ -165,20 +173,57 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    paddingBottom: 30,
+    backgroundColor: COLOR.bg_primary,
   },
   title: {
     fontSize: 18,
     marginBottom: 10,
+    color: COLOR.text_primary,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  pickerContainer: {
+    backgroundColor: COLOR.bg_secondary,
+    borderRadius: 4,
+    marginHorizontal: 20,
+  },
+  pickerContainerSelected: {
+    backgroundColor: COLOR.bg_primary,
+    borderRadius: 4,
+    marginHorizontal: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  item:{
+    fontSize: 20,    
   },
   picker: {
-    height: 50,
+    backgroundColor: COLOR.bg_secondary,
+    color: COLOR.text_primary,
+    fontSize: 60,
+    height: 80,
     width: '100%',
   },
   selectedText: {
-    marginTop: 20,
-    fontSize: 16,
+    backgroundColor: COLOR.bg_primary,
+    color: COLOR.text_primary,
+    height: 80,
+    width: '100%',
+    borderWidth: 2,
+    borderColor: 'white',
   },
+  button:{
+    backgroundColor: COLOR.btn_primary,
+    padding: 20,
+    alignItems: 'center',
+    borderRadius: 5,
+  },
+  text:{
+    color: COLOR.text_primary,
+    fontWeight: 'bold',
+    fontSize: 20,
+  }
 });
 export default HomeScreen;
