@@ -1,18 +1,24 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Image,
   PermissionsAndroid,
   Platform,
   SafeAreaView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, {Marker, Circle} from 'react-native-maps';
+import MapView, {Marker, Circle, Callout} from 'react-native-maps';
 import io from 'socket.io-client';
 import {BACKEND_URL} from '../../secret';
 import Geolocation from '@react-native-community/geolocation';
 import Loader from '../../molecules/Loader';
 import Toast from 'react-native-toast-message';
+import { COLOR } from '../../constants';
+import BusDetailsSheet from './BusDetailsBottomSheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 
 type BusLocation = {
   bus_id: string;
@@ -30,6 +36,8 @@ const MapScreen: React.FC = () => {
     longitude: number;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const sheetRef = useRef<any>(null);
+  const [selectedBus, setSelectedBus] = useState<any | null>(null);
 
   // Ask permission on Android
   const requestLocationPermission = async () => {
@@ -112,9 +120,27 @@ const MapScreen: React.FC = () => {
     };
   }, []);
 
+  const handleSheetOpen = (busId: string,busNumber: string) => {
+    console.log('sheet clicked');
+    const bus = {
+      bus_id: busId,
+      bus_no: busNumber
+    }
+    if (bus) {
+      setSelectedBus(bus);
+    }
+  }
+
+  useEffect(()=> {
+    if(selectedBus){
+      // sheetRef.current?.expand();
+        sheetRef.current?.snapToIndex(0);
+    }
+  },[selectedBus])
+
   return (
     <SafeAreaView style={{flex: 1}}>
-      {/* <Loader visible={isLoading} /> */}
+      <GestureHandlerRootView style={styles.bottom_sheet}>
       <View style={styles.container}>
         <MapView
           style={styles.mapStyle}
@@ -128,14 +154,12 @@ const MapScreen: React.FC = () => {
                   longitudeDelta: 0.02,
                 }
               : {
-                  // fallback region until location is fetched
                   latitude: 22.320336,
                   longitude: 87.309468,
                   latitudeDelta: 0.02,
                   longitudeDelta: 0.02,
                 }
           }>
-          {/* Bus Markers */}
           {Object.values(busLocations).map(bus => (
             <Marker
               key={bus.bus_id}
@@ -143,18 +167,15 @@ const MapScreen: React.FC = () => {
                 latitude: bus.latitude,
                 longitude: bus.longitude,
               }}
-              title={`Bus ${bus.bus_no}`}
-              description={`Bus ID: ${bus.bus_id}`}>
-              <View style={{width: 35, height: 35}}>
-                <Image
-                  source={require('../../assets/bus.png')}
-                  style={{width: '100%', height: '100%', resizeMode: 'contain'}}
-                />
+              >
+              <Callout tooltip={true} onPress={() => handleSheetOpen(bus.bus_id, bus.bus_no)}>
+              <View style={{ padding: 10, backgroundColor: COLOR.bg_primary }}>
+                <Text style={{ fontWeight: 'bold',color: COLOR.text_secondary  }}>{bus.bus_no}</Text>
+                  <Text style={{ color: COLOR.text_secondary }}>Click for more details</Text>
               </View>
+              </Callout>
             </Marker>
           ))}
-
-          {/* User Marker + Circle */}
           {userLocation && (
             <>
               <Marker
@@ -173,6 +194,35 @@ const MapScreen: React.FC = () => {
           )}
         </MapView>
       </View>
+      <BottomSheet
+        ref={sheetRef}
+        index={-1}
+        snapPoints={useMemo(() => ['80%'], [])}
+        enablePanDownToClose={true}
+        backgroundStyle={{
+          backgroundColor: COLOR.bg_primary,
+        }}
+        enableContentPanningGesture={false}
+        handleIndicatorStyle={{
+          backgroundColor: COLOR.golden,
+          width: 80,
+          height: 5,
+        }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1} // hide when sheet is closed
+            appearsOnIndex={0}     // show backdrop when sheet opens
+            pressBehavior="close"  // 👈 this enables closing on tap
+          />
+        )}
+      >
+        <BottomSheetView style={{height: '100%'}} >
+          <BusDetailsSheet busId={selectedBus?.bus_id} busNumber={selectedBus?.bus_no}/>
+        </BottomSheetView>
+      </BottomSheet>
+    </GestureHandlerRootView>
+        
     </SafeAreaView>
   );
 };
@@ -180,8 +230,12 @@ const MapScreen: React.FC = () => {
 export default MapScreen;
 
 const styles = StyleSheet.create({
+  bottom_sheet:{
+    flex: 1,
+    backgroundColor: COLOR.bg_primary,
+  },
   container: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },

@@ -6,6 +6,7 @@ import Loader from '../../molecules/Loader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Picker} from '@react-native-picker/picker';
 import {COLOR} from '../../constants';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const BusDetailsScreen = () => {
   const [busData, setBusData] = useState<any | null>(null);
@@ -140,6 +141,8 @@ const BusDetailsScreen = () => {
           />
          
           <Text style={styles.stoppage}> Stopagges </Text>
+          <View style={{height:'50%',borderWidth:0.5,borderColor:COLOR.bg_tertiary,padding:20,borderRadius:10}}>
+          <ScrollView>
           {busData?.stoppage && busData.stoppage.map((stop: any, index: number) => (
             <View key={index} style={styles.stopItem}>
               <Text style={styles.stopName}>
@@ -151,6 +154,8 @@ const BusDetailsScreen = () => {
               </Text>
             </View>
           ))}
+          </ScrollView>
+          </View>
         </>
       )}
     </View>

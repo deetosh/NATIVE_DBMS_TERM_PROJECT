@@ -1,69 +1,120 @@
-// components/BusDetails.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { callAPI } from '../../services/callApi'; // replace with your actual API helper
+import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { callAPI } from '../../services/callApi';
 import Loader from '../../molecules/Loader';
+import { COLOR } from '../../constants';
+import { BottomSheetFlatList, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
-const BusDetails = ({ busId }: { busId: string }) => {
-  const [busData, setBusData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+type Props = {
+  busId: string | null;
+  busNumber: string;
+};
 
+export default function BusDetails({ busId, busNumber }: Props) {
+  const [busData, setBusData] = useState<any | null>(null);
+  const [loading, setLoading] = useState(false);
   const currentHour = new Date().getHours();
 
   useEffect(() => {
-    const fetchBus = async () => {
+    const fetchBusDetails = async () => {
+      if (!busId) return;
+      setLoading(true);
       try {
-        const response = await callAPI(`/bus/getById`, 'GET',{},{busId: busId});
-        setBusData(response.data);
+        const response = await callAPI('/bus/getById', 'GET', {}, { busId });
+        if (!response.isError) {
+          setBusData(response.data);
+        }
       } catch (err) {
-        console.error('Failed to fetch bus details', err);
+        console.error('Error fetching bus details:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (busId) fetchBus();
+    fetchBusDetails();
   }, [busId]);
 
-  if (loading) {
-    return <Loader visible={loading} />;
-  }
-
-  if (!busData) {
-    return <Text style={styles.errorText}>No bus data found.</Text>;
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bus Details</Text>
-      <Text style={styles.info}>Bus Number: {busData.bus_number}</Text>
-      <Text style={styles.info}>Driver: {busData.driver?.username}</Text>
+    <View style={styles.container} >
+      <Text style={styles.title}>Bus Number: {busNumber}</Text>
+      <Loader visible={loading} />
 
-      {busData.stoppage.map((stop: any, index: number) => (
-        <View key={index} style={styles.stopItem}>
-          <Text style={styles.stopName}>Location: {stop.location.name}</Text>
-          <Text style={styles.stopTime}>
-            Arrival Time: {currentHour}:{stop.time.toString().padStart(2, '0')}
-          </Text>
-        </View>
-      ))}
+      {!loading && busData && (
+        <>
+          <Text style={styles.label}>Driver</Text>
+          <TextInput
+            style={styles.disabledInput}
+            value={busData?.driver?.username ?? ''}
+            editable={false}
+          />
+
+          <Text style={styles.label}>Stoppages</Text>
+          <View style={styles.stoppageContainer}>
+            <BottomSheetScrollView>
+            {busData?.stoppage?.map((stop: any, index: number) => (
+              <View key={index} style={styles.stopItem}>
+                <Text style={styles.stopText}>
+                  Location: {stop?.location?.name ?? ''}
+                </Text>
+                <Text style={styles.stopText}>
+                  Arrival Time: {currentHour}:{stop?.time?.toString().padStart(2, '0') ?? ''}
+                </Text>
+              </View>
+            ))}
+            </BottomSheetScrollView>
+          </View>
+        </>
+      )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: 'white', padding: 16, height: 300 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-  info: { fontSize: 16, marginBottom: 8 },
-  stopItem: {
-    marginVertical: 8,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
-    paddingBottom: 8,
+  container: {
+    padding: 16,
+    backgroundColor: COLOR.bg_primary,
+    marginBottom: 100,
+    flex: 1,
+    minHeight: 500
   },
-  stopName: { fontSize: 16, fontWeight: '600' },
-  stopTime: { fontSize: 14, color: 'gray' },
-  errorText: { padding: 20, color: 'red' },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLOR.golden,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    color: COLOR.golden,
+    marginBottom: 6,
+  },
+  disabledInput: {
+    // height: 45,
+    borderColor: COLOR.bg_tertiary,
+    backgroundColor: COLOR.bg_primary,
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginBottom: 16,
+    color: COLOR.text_primary,
+    fontSize: 16,
+  },
+  stoppageContainer: {
+    borderWidth: 0.5,
+    borderColor: COLOR.bg_tertiary,
+    borderRadius: 10,
+    padding: 10,
+    height: 300,
+    flex: 1,
+  },
+  stopItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderColor: COLOR.bg_tertiary,
+  },
+  stopText: {
+    fontSize: 14,
+    color: COLOR.text_secondary,
+  },
 });
-
-export default BusDetails;

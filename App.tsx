@@ -17,16 +17,16 @@ const Stack = createStackNavigator();
 const App = () => {
 
   return (
-    <SafeAreaProvider style={{flex: 1}}>
-      <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false,animation:'fade_from_bottom' }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="Main" component={MainContainer} options={{ gestureEnabled: false }} />
-      </Stack.Navigator>
-    </NavigationContainer>
-    <Toast position='bottom'/>
-    </SafeAreaProvider>
+      <SafeAreaProvider style={{flex: 1}}>
+          <NavigationContainer>
+            <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false,animation:'fade_from_bottom' }}>
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="Main" component={MainContainer} options={{ gestureEnabled: false }} />
+            </Stack.Navigator>
+          </NavigationContainer>
+          <Toast position='top'/>
+      </SafeAreaProvider>
   );
 };
 export default App;
