@@ -15,7 +15,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Screen name
-const HOME_SCREEN = 'Home';
+const HOME_SCREEN = 'Drive';
 const BUS_DETAILS_SCREEN = 'Bus Details';
 const MAP_SCREEN = 'Map';
 const LOCATION_SCREEN = 'Location';

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Button, PermissionsAndroid, Platform } from 'react-native';
+import { View, Text, Button, PermissionsAndroid, Platform, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import Geolocation from '@react-native-community/geolocation';
 import { BACKEND_URL } from '../../secret';
 import { callAPI } from '../../services/callApi';
 import Loader from '../../molecules/Loader';
+import { COLOR } from '../../constants';
 
 
 
@@ -121,21 +122,71 @@ const HomeScreen: React.FC = () => {
 
 
   return (
-    <>
+    <View style={{ flex:1, backgroundColor:COLOR.bg_primary, alignItems:'center', padding:16 }}>
+      <Text style={styles.title}>Start your drive</Text>
     {isLoading && <Loader visible={isLoading} />}
     {!isLoading && ( BusDetails ? (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Driver Tracking</Text>
-        <Button title={tracking ? 'Stop Tracking' : 'Start Tracking'} onPress={() => setTracking((prev) => !prev)} />
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <Text style={styles.info}>Bus Number</Text>
+        <TextInput
+          style={styles.disabledtextInput}
+          value={
+            BusDetails?.bus_no
+              ? `${BusDetails?.bus_no}`
+              : ''
+          }
+          editable={false}
+          selectTextOnFocus={false}
+        />
+
+        <Text style={{...styles.info,marginTop:30}}>Driver Tracking</Text>
+        <TouchableOpacity style={tracking ? styles.button_stop :styles.button} onPress={() => setTracking((prev) => !prev)}>
+          <Text style={styles.buttonText}>{tracking ? 'Stop Tracking' : 'Start Tracking'}</Text>
+        </TouchableOpacity>
       </View>
     ) : (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Please register with a bus</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width:'50%' }}>
+        <Text style={{color: COLOR.text_secondary}}>Please ask admin to assign a bus to start your drive</Text>
       </View>
     ))}
-    </>
+    </View>
     
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: COLOR.golden,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    height: 50,
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  button_stop: {
+    backgroundColor: COLOR.btn_secondary,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    height: 50,
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  buttonText: {color: COLOR.text_dark, fontWeight: 'bold'},
+  disabledtextInput: {
+    height: 45,
+    borderColor: COLOR.bg_tertiary,
+    backgroundColor: COLOR.bg_primary,
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    color: COLOR.text_primary,
+    fontSize: 16,
+  },
+  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 25,color: COLOR.golden,textAlign: 'center'},
+  info: {fontSize: 16, marginBottom: 8,color: COLOR.golden},
+});
 
 export default HomeScreen;
