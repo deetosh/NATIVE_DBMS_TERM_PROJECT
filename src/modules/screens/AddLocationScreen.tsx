@@ -229,14 +229,13 @@ export default AddLocationScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 30,
   },
   map: {
     flex: 1,
   },
   plusButton: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 100,
     right: 30,
     backgroundColor: COLOR.bg_primary,
     borderRadius: 30,

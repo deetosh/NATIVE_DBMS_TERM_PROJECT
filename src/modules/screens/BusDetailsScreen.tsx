@@ -1,17 +1,17 @@
 // components/BusDetails.tsx
 import React, {useEffect, useState} from 'react';
-import {View, Text, ActivityIndicator, StyleSheet} from 'react-native';
+import {View, Text, ActivityIndicator, StyleSheet, TextInput} from 'react-native';
 import {callAPI} from '../../services/callApi'; // replace with your actual API helper
 import Loader from '../../molecules/Loader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Picker } from "@react-native-picker/picker";
+import {Picker} from '@react-native-picker/picker';
 import {COLOR} from '../../constants';
 
 const BusDetailsScreen = () => {
-  const [busData, setBusData] = useState<any[]>([]);
+  const [busData, setBusData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null); // Replace with actual bus ID fetching logic
-
+  const [allBuses, setAllBuses] = useState<any[]>([]); // Replace with actual bus data fetching logic
   const currentHour = new Date().getHours();
 
   // useEffect(() => {
@@ -38,9 +38,9 @@ const BusDetailsScreen = () => {
       try {
         setLoading(true);
         const response = await callAPI(`/bus/get`, 'GET', {}, {});
-        if(!response.isError){
+        if (!response.isError) {
           console.log('Bus data:', response.data);
-          setBusData(response.data);
+          setAllBuses(response.data);
         }
       } catch (err) {
         console.error('Failed to fetch bus details', err);
@@ -52,20 +52,35 @@ const BusDetailsScreen = () => {
     fetchAllBuses();
   }, []);
 
+  useEffect(() => {
+    const fetchBusDetails = async (busId: string) => {
+      try {
+        setLoading(true);
+        const response = await callAPI(
+          `/bus/getById`,
+          'GET',
+          {},
+          {busId: busId},
+        );
+        if (!response.isError) {
+          console.log('Bus data:', response.data);
+          setBusData(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch bus details', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (selectedBusId) {
+      fetchBusDetails(selectedBusId);
+    }
+  }, [selectedBusId]);
+
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.title}>Bus Details</Text>
-      <Text style={styles.info}>Bus Number: {busData.bus_number}</Text>
-      <Text style={styles.info}>Driver: {busData.driver?.username}</Text>
-
-      {busData.stoppage.map((stop: any, index: number) => (
-        <View key={index} style={styles.stopItem}>
-          <Text style={styles.stopName}>Location: {stop.location.name}</Text>
-          <Text style={styles.stopTime}>
-            Arrival Time: {currentHour}:{stop.time.toString().padStart(2, '0')}
-          </Text>
-        </View>
-      ))} */}
+      <Text style={styles.title}>Bus Details</Text>
       <Loader visible={loading} />
       <View style={styles.pickerContainer}>
         <Ionicons
@@ -82,11 +97,11 @@ const BusDetailsScreen = () => {
           dropdownIconColor={COLOR.text_primary}>
           <Picker.Item
             label="Select Bus"
-            value=""
+            value= ""
             color="grey"
             style={styles.pickerLabel}
           />
-          {busData.map((bus:any) => (
+          {allBuses.map((bus: any) => (
             <Picker.Item
               key={bus._id}
               label={bus.bus_number}
@@ -96,42 +111,105 @@ const BusDetailsScreen = () => {
           ))}
         </Picker>
       </View>
+
+      {selectedBusId && busData && (
+        <>
+          
+          {/* <Text style={styles.info}>Bus Number</Text>
+          <TextInput
+            style={styles.disabledtextInput}
+            value={
+              busData?.bus_number
+                ? `${busData?.bus_number}`
+                : ''
+            }
+            editable={false}
+            selectTextOnFocus={false}
+          /> */}
+
+          <Text style={styles.info}>Driver</Text>
+          <TextInput
+            style={styles.disabledtextInput}
+            value={
+              busData.driver?.username
+                ? `${busData.driver?.username}`
+                : ''
+            }
+            editable={false}
+            selectTextOnFocus={false}
+          />
+         
+          <Text style={styles.stoppage}> Stopagges </Text>
+          {busData?.stoppage && busData.stoppage.map((stop: any, index: number) => (
+            <View key={index} style={styles.stopItem}>
+              <Text style={styles.stopName}>
+                Location: {stop?.location?.name ?? ''}
+              </Text>
+              <Text style={styles.stopTime}>
+                Arrival Time: {currentHour}:
+                {stop?.time?.toString().padStart(2, '0') ?? ''}
+              </Text>
+            </View>
+          ))}
+        </>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {backgroundColor: COLOR.bg_primary, padding: 16, flex: 1},
-  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 12},
-  info: {fontSize: 16, marginBottom: 8},
+  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 25,color: COLOR.golden,textAlign: 'center'},
+  info: {fontSize: 16, marginBottom: 8,color: COLOR.golden},
   stopItem: {
     marginVertical: 8,
-    borderBottomColor: '#ccc',
+    borderBottomColor: COLOR.bg_tertiary,
     borderBottomWidth: 1,
     paddingBottom: 8,
   },
-  stopName: {fontSize: 16, fontWeight: '600'},
-  stopTime: {fontSize: 14, color: 'gray'},
+  stopName: {fontSize: 16, fontWeight: '600',color: COLOR.text_secondary},
+  stopTime: {fontSize: 14, color: COLOR.text_tertiary},
   errorText: {padding: 20, color: 'red'},
   picker: {
     flex: 1,
     color: COLOR.text_secondary,
     fontSize: 18,
+    borderWidth: 1,
+    borderColor: COLOR.text_primary
   },
   pickerLabel: {
-    backgroundColor: COLOR.bg_secondary,
+    backgroundColor: COLOR.bg_primary,
     color: COLOR.text_secondary,
   },
   pickerContainer: {
     borderWidth: 1,
     borderRadius: 8,
-    marginBottom: 10,
+    marginBottom: 20,
     paddingHorizontal: 10,
     borderColor: COLOR.bg_tertiary,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  icon: { marginRight: 10 },
+  icon: {marginRight: 10},
+  stoppage: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    marginTop: 20,
+    color: COLOR.golden,
+    textAlign: 'center',
+  },
+  disabledtextInput: {
+    height: 45,
+    borderColor: COLOR.bg_tertiary,
+    backgroundColor: COLOR.bg_primary,
+    borderWidth: 0.5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    color: COLOR.text_primary,
+    fontSize: 16,
+  },
 });
 
 export default BusDetailsScreen;

@@ -10,6 +10,8 @@ export const COLOR = {
     text_dark: "#000000",
     btn_primary: "#bae3be",
     btn_secondary: "#f0c2c2",
+    golden: "#cfc8ab",
+    my_color: "#8F9181"
 }
 
 export const initialRegionMap : Region = {

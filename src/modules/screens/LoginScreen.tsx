@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   icon: {marginRight: 10},
   input: {flex: 1, height: 50, color: COLOR.text_secondary, fontSize:18},
   button: {
-    backgroundColor: COLOR.btn_primary,
+    backgroundColor: COLOR.golden,
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',

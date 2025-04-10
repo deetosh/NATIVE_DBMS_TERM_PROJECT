@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   pickerContainer: { borderWidth: 1, borderRadius: 8, marginBottom: 10, paddingHorizontal: 10 , borderColor: COLOR.bg_tertiary, flexDirection: "row", alignItems: "center"},
   input: {flex: 1, height: 50, color: COLOR.text_secondary, fontSize:18},
   button: {
-    backgroundColor: COLOR.btn_primary,
+    backgroundColor: COLOR.golden,
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',

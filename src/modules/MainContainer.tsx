@@ -82,13 +82,15 @@ const MainContainer = () => {
                 <Ionicons
                   name={iconName}
                   size={30}
-                  color={COLOR.text_primary}
+                  color={color}
                 />
               );
             },
+            
 
-            tabBarActiveTintColor: COLOR.text_primary,
-            tabBarInactiveTintColor: COLOR.text_tertiary,
+            tabBarActiveTintColor: COLOR.bg_primary,
+            tabBarActiveBackgroundColor: COLOR.my_color,
+            tabBarInactiveTintColor: COLOR.bg_secondary,
             tabBarLabelStyle: {paddingBottom: 10, fontSize: 10, paddingTop: 8},
             tabBarStyle: {
               position: 'absolute',
@@ -96,11 +98,13 @@ const MainContainer = () => {
               left: 0,
               right: 0,
               elevation: 0,
-              backgroundColor: COLOR.bg_secondary,
-              // backgroundColor: 'transparent',
-              borderTopWidth: 0,
+              backgroundColor: COLOR.text_tertiary,
               height: 60 + insets.bottom,
-              paddingBottom: insets.bottom,
+              marginHorizontal: 25,
+              marginVertical: 20,
+              borderWidth: 1,
+              borderRadius: 30,
+              borderColor: COLOR.bg_primary,
               // height: 60,
             },
             headerShown: false,
