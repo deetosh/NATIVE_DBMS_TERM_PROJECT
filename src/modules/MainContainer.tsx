@@ -27,7 +27,6 @@ const Tab = createBottomTabNavigator();
 
 const MainContainer = () => {
   const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -38,16 +37,14 @@ const MainContainer = () => {
         setRole(storedRole);
       } catch (error) {
         console.error('Failed to fetch user role:', error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchRole();
   }, []);
 
   return (
-    <>
-      <Loader visible={loading} />
+    <View style={{flex: 1, backgroundColor: COLOR.bg_primary}}>
+      {/* <Loader visible={loading} /> */}
       {/* <NavigationContainer> */}
       {role && (
         <Tab.Navigator
@@ -147,7 +144,7 @@ const MainContainer = () => {
         </Tab.Navigator>
       )}
       {/* </NavigationContainer> */}
-    </>
+    </View>
   );
 };
 

@@ -74,11 +74,9 @@ const LoginScreen = ({navigation}: any) => {
     setIsLoading(true);
     // Call your API here
     const response = await callAPI('/auth/login', 'POST', payload);
-    setIsLoading(false);
-    console.log('API Response:', response);
     
-    setEmail('');
-    setPassword('');
+    console.log('API Response:', response);
+     
     if (!response.isError) {
       Toast.show({
         type: 'success',
@@ -90,13 +88,17 @@ const LoginScreen = ({navigation}: any) => {
       AsyncStorage.setItem('role', response.data.user.role);
       AsyncStorage.setItem('name', response.data.user.username);
       AsyncStorage.setItem('email', response.data.user.email);
+      setIsLoading(false);
       navigation.navigate('Main');
+      setEmail('');
+      setPassword('');
     } else {
       Toast.show({
         type: "error",
         text1: "Login Failed",
         text2: response.message,
       });
+      setIsLoading(false);
       // console.error(response.message);
     }
   };

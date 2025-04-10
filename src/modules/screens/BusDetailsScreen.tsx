@@ -66,6 +66,7 @@ const BusDetailsScreen = () => {
           </Text>
         </View>
       ))} */}
+      <Loader visible={loading} />
       <View style={styles.pickerContainer}>
         <Ionicons
           name="bus-outline"
@@ -95,7 +96,6 @@ const BusDetailsScreen = () => {
           ))}
         </Picker>
       </View>
-      <Loader visible={loading} />
     </View>
   );
 };
