@@ -5,10 +5,11 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {callAPI} from '../../services/callApi';
+import Toast from 'react-native-toast-message';
+import { COLOR } from '../../constants';
 
 interface Location {
   _id: string;
@@ -40,25 +41,38 @@ const AddBusScreen: React.FC = () => {
       if (!res.isError && res.data) {
         setAvailableLocations(res.data as Location[]);
       } else {
-        Alert.alert('Error', res.message || 'Could not fetch locations.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: res.message || 'Could not fetch locations.',
+        });
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'An error occurred while fetching locations.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong while fetching locations.',
+      });
     }
   };
 
   const addStop = () => {
     if (!selectedLocationId || !arrivalTime) {
-      Alert.alert(
-        'Incomplete',
-        'Please select a location and enter the arrival time.',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please select a location and enter the arrival time.',
+      });
       return;
     }
 
-    if (route.find(stop => stop._id === selectedLocationId)) {
-      Alert.alert('Duplicate', 'This stop is already in the route.');
+    const arrivalTimeNum = parseInt(arrivalTime);
+    if(arrivalTimeNum < 0 || arrivalTimeNum >=60) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Arrival time must be between 0 and 59 minutes.',
+      });
       return;
     }
 
@@ -67,14 +81,20 @@ const AddBusScreen: React.FC = () => {
     );
     if (!location) return;
 
-    setRoute(prev => [
-      ...prev,
-      {
-        _id: location._id,
-        name: location.name,
-        time: parseInt(arrivalTime),
-      },
-    ]);
+    // insert the new stop in ascending order with respect to time
+    
+    const newRoute = [...route, { _id: location._id, name: location.name, time: arrivalTimeNum }];
+    newRoute.sort((a, b) => a.time - b.time);
+    setRoute(newRoute);
+
+    // setRoute(prev => [
+    //   ...prev,
+    //   {
+    //     _id: location._id,
+    //     name: location.name,
+    //     time: parseInt(arrivalTime),
+    //   },
+    // ]);
 
     setSelectedLocationId('');
     setArrivalTime('');
@@ -86,10 +106,11 @@ const AddBusScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!busNo || route.length === 0) {
-      Alert.alert(
-        'Missing Fields',
-        'Please fill in the bus number and add at least one stop.',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please fill in the bus number and add at least one stop.',
+      });
       return;
     }
 
@@ -104,50 +125,63 @@ const AddBusScreen: React.FC = () => {
     try {
       const res = await callAPI('/bus/add', 'POST', payload);
       if (!res.isError) {
-        Alert.alert('Success', 'Bus added successfully!');
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Bus added successfully!',
+        });
         setBusNo('');
         setRoute([]);
       } else {
-        Alert.alert('Error', res.message || 'Failed to add bus.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: res.message || 'Could not add bus.',
+        });
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Something went wrong.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong while adding the bus.',
+      });
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={{padding: 20}}>
-      <Text style={{fontSize: 22, fontWeight: 'bold', marginBottom: 10}}>
+    <View style={{flex: 1, backgroundColor:COLOR.bg_primary}}>
+    <ScrollView contentContainerStyle={{padding: 20}} style={{flex: 1,backgroundColor: COLOR.bg_primary, marginBottom:100}}>
+      <Text style={{fontSize: 22, fontWeight: 'bold', marginBottom: 10, color: COLOR.golden, textAlign: 'center'}}>
         Add a New Bus
       </Text>
 
-      <Text style={{marginTop: 10}}>Bus Number:</Text>
+      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Bus Number:</Text>
       <TextInput
         value={busNo}
         onChangeText={setBusNo}
         placeholder="Enter Bus Number"
         style={{
           borderWidth: 1,
-          borderColor: '#ccc',
+          borderColor: COLOR.bg_tertiary,
           padding: 10,
           borderRadius: 8,
           marginBottom: 10,
         }}
       />
 
-      <Text style={{marginTop: 10}}>Select Location:</Text>
+      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Select Location:</Text>
       <View
         style={{
           borderWidth: 1,
-          borderColor: '#ccc',
+          borderColor: COLOR.bg_tertiary,
           borderRadius: 8,
           marginBottom: 10,
         }}>
         <Picker
           selectedValue={selectedLocationId}
           onValueChange={itemValue => setSelectedLocationId(itemValue)}
-          style={{color: 'black'}} // 👈 Add this
+          style={{color: COLOR.text_secondary}} // 👈 Add this
         >
           <Picker.Item label="-- Select a location --" value="" />
           {availableLocations.map(loc => (
@@ -156,7 +190,7 @@ const AddBusScreen: React.FC = () => {
         </Picker>
       </View>
 
-      <Text>Arrival Time at Stop (in minutes):</Text>
+      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Arrival Time at Stop (in minutes):</Text>
       <TextInput
         value={arrivalTime}
         onChangeText={setArrivalTime}
@@ -164,40 +198,41 @@ const AddBusScreen: React.FC = () => {
         keyboardType="numeric"
         style={{
           borderWidth: 1,
-          borderColor: '#ccc',
+          borderColor: COLOR.bg_tertiary,
           padding: 10,
           borderRadius: 8,
           marginBottom: 10,
-          color :'black',
+          color :COLOR.text_secondary,
         }}
       />
 
       <TouchableOpacity
         onPress={addStop}
         style={{
-          backgroundColor: '#4CAF50',
+          backgroundColor: COLOR.my_color,
           padding: 10,
           borderRadius: 8,
           marginBottom: 20,
         }}>
-        <Text style={{color: '#fff', textAlign: 'center'}}>
+        <Text style={{color: COLOR.text_primary, textAlign: 'center'}}>
           Add Stop to Route
         </Text>
       </TouchableOpacity>
 
-      <Text style={{fontWeight: 'bold', marginBottom: 5}}>Route Preview:</Text>
+      <Text style={{fontWeight: 'bold', marginBottom: 5,color:COLOR.text_secondary}}>Route Preview:</Text>
       {route.map((stop, index) => (
         <View
           key={stop._id}
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
-            backgroundColor: '#f0f0f0',
+            backgroundColor: COLOR.bg_secondary,
             padding: 10,
             borderRadius: 8,
             marginBottom: 5,
+            flexWrap: 'wrap',
           }}>
-          <Text>
+          <Text style={{color: COLOR.text_secondary}}>
             {index + 1}. {stop.name} — {stop.time} min
           </Text>
           <TouchableOpacity onPress={() => removeStop(stop._id)}>
@@ -209,16 +244,17 @@ const AddBusScreen: React.FC = () => {
       <TouchableOpacity
         onPress={handleSubmit}
         style={{
-          backgroundColor: '#2196F3',
+          backgroundColor: COLOR.golden,
           padding: 12,
           borderRadius: 10,
           marginTop: 20,
         }}>
-        <Text style={{color: '#fff', textAlign: 'center', fontWeight: 'bold'}}>
+        <Text style={{color: COLOR.text_dark, textAlign: 'center', fontWeight: 'bold'}}>
           Submit Bus
         </Text>
       </TouchableOpacity>
     </ScrollView>
+    </View>
   );
 };
 
