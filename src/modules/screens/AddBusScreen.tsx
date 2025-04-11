@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {Picker} from '@react-native-picker/picker';
 import {callAPI} from '../../services/callApi';
 import Toast from 'react-native-toast-message';
 import { COLOR } from '../../constants';
+import SearchableDropdown, {  } from '../../molecules/SearchableDropDown';
 
 interface Location {
   _id: string;
@@ -25,9 +26,10 @@ interface Stop {
 const AddBusScreen: React.FC = () => {
   const [busNo, setBusNo] = useState<string>('');
   const [availableLocations, setAvailableLocations] = useState<Location[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [selectedLocationId, setSelectedLocationId] = useState<string|null>('');
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [route, setRoute] = useState<Stop[]>([]);
+  // const dropdownRef = useRef<SearchableDropdownRef>(null);
 
   useEffect(() => {
     fetchLocations();
@@ -76,6 +78,19 @@ const AddBusScreen: React.FC = () => {
       return;
     }
 
+    // check if the location is already in the route with same time
+    const existingStop = route.find(
+      stop => stop._id === selectedLocationId && stop.time === arrivalTimeNum,
+    );
+    if (existingStop) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'This stop is already in the route with the same time.',
+      });
+      return;
+    }
+
     const location = availableLocations.find(
       loc => loc._id === selectedLocationId,
     );
@@ -95,13 +110,13 @@ const AddBusScreen: React.FC = () => {
     //     time: parseInt(arrivalTime),
     //   },
     // ]);
-
+    // dropdownRef.current?.clear();
     setSelectedLocationId('');
     setArrivalTime('');
   };
 
-  const removeStop = (id: string) => {
-    setRoute(route.filter(stop => stop._id !== id));
+  const removeStop = (id: string,time:number) => {
+    setRoute(route.filter(stop => stop._id !== id || stop.time !== time));
   };
 
   const handleSubmit = async () => {
@@ -171,7 +186,7 @@ const AddBusScreen: React.FC = () => {
       />
 
       <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Select Location:</Text>
-      <View
+      {/* <View
         style={{
           borderWidth: 1,
           borderColor: COLOR.bg_tertiary,
@@ -188,7 +203,19 @@ const AddBusScreen: React.FC = () => {
             <Picker.Item key={loc._id} label={loc.name} value={loc._id} />
           ))}
         </Picker>
-      </View>
+      </View> */}
+
+      <SearchableDropdown
+        // ref={dropdownRef}
+        data={availableLocations.map(loc => ({
+          id: loc._id,
+          title: loc.name,
+        }))}
+        selected={selectedLocationId}
+        setSelected={setSelectedLocationId}
+        placeholder="Select Bus"
+        containerStyle={{marginBottom: 10}}
+      />
 
       <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Arrival Time at Stop (in minutes):</Text>
       <TextInput
@@ -222,7 +249,7 @@ const AddBusScreen: React.FC = () => {
       <Text style={{fontWeight: 'bold', marginBottom: 5,color:COLOR.text_secondary}}>Route Preview:</Text>
       {route.map((stop, index) => (
         <View
-          key={stop._id}
+          key={index}
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -235,7 +262,7 @@ const AddBusScreen: React.FC = () => {
           <Text style={{color: COLOR.text_secondary}}>
             {index + 1}. {stop.name} — {stop.time} min
           </Text>
-          <TouchableOpacity onPress={() => removeStop(stop._id)}>
+          <TouchableOpacity onPress={() => removeStop(stop._id,stop.time)}>
             <Text style={{color: 'red'}}>Remove</Text>
           </TouchableOpacity>
         </View>

@@ -7,6 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Picker} from '@react-native-picker/picker';
 import {COLOR} from '../../constants';
 import { ScrollView } from 'react-native-gesture-handler';
+import SearchableDropdown from '../../molecules/SearchableDropDown';
 
 const BusDetailsScreen = () => {
   const [busData, setBusData] = useState<any | null>(null);
@@ -83,7 +84,7 @@ const BusDetailsScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Bus Details</Text>
       <Loader visible={loading} />
-      <View style={styles.pickerContainer}>
+      {/* <View style={styles.pickerContainer}>
         <Ionicons
           name="bus-outline"
           size={20}
@@ -111,7 +112,16 @@ const BusDetailsScreen = () => {
             />
           ))}
         </Picker>
-      </View>
+      </View> */}
+      <SearchableDropdown
+        data={allBuses.map(bus => ({
+          id: bus._id,
+          title: bus.bus_number,
+        }))}
+        setSelected={setSelectedBusId}
+        placeholder="Select Bus"
+        containerStyle={{marginBottom: 20}}
+      />
 
       {selectedBusId && busData && (
         <>
