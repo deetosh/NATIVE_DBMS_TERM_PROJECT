@@ -1,288 +1,194 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Alert,
+  Button,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
-import {callAPI} from '../../services/callApi';
-import Toast from 'react-native-toast-message';
-import { COLOR } from '../../constants';
-import SearchableDropdown, {  } from '../../molecules/SearchableDropDown';
+import Addbusform from './addbusform';
 
-interface Location {
-  _id: string;
+type Bus = {
+  id: string;
   name: string;
-}
+  route: string[];
+};
 
-interface Stop {
-  _id: string;
+type Location = {
+  id: string;
   name: string;
-  time: number;
-}
+};
 
-const AddBusScreen: React.FC = () => {
-  const [busNo, setBusNo] = useState<string>('');
-  const [availableLocations, setAvailableLocations] = useState<Location[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<string|null>('');
-  const [arrivalTime, setArrivalTime] = useState<string>('');
-  const [route, setRoute] = useState<Stop[]>([]);
-  // const dropdownRef = useRef<SearchableDropdownRef>(null);
+const BusListScreen = () => {
+  const [buses, setBuses] = useState<Bus[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
+  const [showBusDetails, setShowBusDetails] = useState(false);
+  const [showAddBusModal, setShowAddBusModal] = useState(false);
 
   useEffect(() => {
-    fetchLocations();
+    fetchAllData();
   }, []);
 
-  const fetchLocations = async () => {
+  const fetchAllData = async () => {
     try {
-      console.log;
-      const res = await callAPI('/location/get', 'GET');
-      console.log('locations', res);
-      if (!res.isError && res.data) {
-        setAvailableLocations(res.data as Location[]);
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: res.message || 'Could not fetch locations.',
-        });
-      }
-    } catch (err) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Something went wrong while fetching locations.',
-      });
-    }
-  };
+      // Fetch buses and locations from API
+      // const busData = await api.get('/buses');
+      // const locationData = await api.get('/locations');
 
-  const addStop = () => {
-    if (!selectedLocationId || !arrivalTime) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please select a location and enter the arrival time.',
-      });
-      return;
-    }
+      // Placeholder data
+      const busData = [
+        { id: '1', name: 'Bus A', route: ['Stop 1', 'Stop 2', 'Stop 3'] },
+        { id: '2', name: 'Bus B', route: ['Stop 2', 'Stop 4'] },
+      ];
+      const locationData = [
+        { id: '1', name: 'Stop 1' },
+        { id: '2', name: 'Stop 2' },
+        { id: '3', name: 'Stop 3' },
+        { id: '4', name: 'Stop 4' },
+      ];
 
-    const arrivalTimeNum = parseInt(arrivalTime);
-    if(arrivalTimeNum < 0 || arrivalTimeNum >=60) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Arrival time must be between 0 and 59 minutes.',
-      });
-      return;
-    }
-
-    // check if the location is already in the route with same time
-    const existingStop = route.find(
-      stop => stop._id === selectedLocationId && stop.time === arrivalTimeNum,
-    );
-    if (existingStop) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'This stop is already in the route with the same time.',
-      });
-      return;
-    }
-
-    const location = availableLocations.find(
-      loc => loc._id === selectedLocationId,
-    );
-    if (!location) return;
-
-    // insert the new stop in ascending order with respect to time
-    
-    const newRoute = [...route, { _id: location._id, name: location.name, time: arrivalTimeNum }];
-    newRoute.sort((a, b) => a.time - b.time);
-    setRoute(newRoute);
-
-    // setRoute(prev => [
-    //   ...prev,
-    //   {
-    //     _id: location._id,
-    //     name: location.name,
-    //     time: parseInt(arrivalTime),
-    //   },
-    // ]);
-    // dropdownRef.current?.clear();
-    setSelectedLocationId('');
-    setArrivalTime('');
-  };
-
-  const removeStop = (id: string,time:number) => {
-    setRoute(route.filter(stop => stop._id !== id || stop.time !== time));
-  };
-
-  const handleSubmit = async () => {
-    if (!busNo || route.length === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please fill in the bus number and add at least one stop.',
-      });
-      return;
-    }
-
-    const payload = {
-      bus_number: busNo,
-      stoppage: route.map(stop => ({
-        location: stop._id,
-        time: stop.time,
-      })),
-    };
-
-    try {
-      const res = await callAPI('/bus/add', 'POST', payload);
-      if (!res.isError) {
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Bus added successfully!',
-        });
-        setBusNo('');
-        setRoute([]);
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: res.message || 'Could not add bus.',
-        });
-      }
+      setBuses(busData);
+      setLocations(locationData);
     } catch (err) {
       console.error(err);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Something went wrong while adding the bus.',
-      });
     }
   };
 
+  const handleBusPress = (bus: Bus) => {
+    setSelectedBus(bus);
+    setShowBusDetails(true);
+  };
+
+  const handleDeleteBus = async (busId: string) => {
+    try {
+      // Delete API call here
+      // await api.delete(`/buses/${busId}`);
+      setBuses((prev) => prev.filter((b) => b.id !== busId));
+      setShowBusDetails(false);
+      Alert.alert('Deleted', 'Bus has been deleted.');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const renderBusItem = ({ item }: { item: Bus }) => (
+    <TouchableOpacity style={styles.busItem} onPress={() => handleBusPress(item)}>
+      <Text style={styles.busName}>{item.name}</Text>
+      <Text style={styles.route}>Route: {item.route.join(' → ')}</Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={{flex: 1, backgroundColor:COLOR.bg_primary}}>
-    <ScrollView contentContainerStyle={{padding: 20}} style={{flex: 1,backgroundColor: COLOR.bg_primary, marginBottom:100}}>
-      <Text style={{fontSize: 22, fontWeight: 'bold', marginBottom: 10, color: COLOR.golden, textAlign: 'center'}}>
-        Add a New Bus
-      </Text>
-
-      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Bus Number:</Text>
-      <TextInput
-        value={busNo}
-        onChangeText={setBusNo}
-        placeholder="Enter Bus Number"
-        style={{
-          borderWidth: 1,
-          borderColor: COLOR.bg_tertiary,
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 10,
-        }}
-      />
-
-      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Select Location:</Text>
-      {/* <View
-        style={{
-          borderWidth: 1,
-          borderColor: COLOR.bg_tertiary,
-          borderRadius: 8,
-          marginBottom: 10,
-        }}>
-        <Picker
-          selectedValue={selectedLocationId}
-          onValueChange={itemValue => setSelectedLocationId(itemValue)}
-          style={{color: COLOR.text_secondary}} // 👈 Add this
-        >
-          <Picker.Item label="-- Select a location --" value="" />
-          {availableLocations.map(loc => (
-            <Picker.Item key={loc._id} label={loc.name} value={loc._id} />
-          ))}
-        </Picker>
-      </View> */}
-
-      <SearchableDropdown
-        // ref={dropdownRef}
-        data={availableLocations.map(loc => ({
-          id: loc._id,
-          title: loc.name,
-        }))}
-        selected={selectedLocationId}
-        setSelected={setSelectedLocationId}
-        placeholder="Select Bus"
-        containerStyle={{marginBottom: 10}}
-      />
-
-      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Arrival Time at Stop (in minutes):</Text>
-      <TextInput
-        value={arrivalTime}
-        onChangeText={setArrivalTime}
-        placeholder="e.g., 20"
-        keyboardType="numeric"
-        style={{
-          borderWidth: 1,
-          borderColor: COLOR.bg_tertiary,
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 10,
-          color :COLOR.text_secondary,
-        }}
+    <View style={styles.container}>
+      <FlatList
+        data={buses}
+        keyExtractor={(item) => item.id}
+        renderItem={renderBusItem}
+        contentContainerStyle={styles.list}
       />
 
       <TouchableOpacity
-        onPress={addStop}
-        style={{
-          backgroundColor: COLOR.my_color,
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 20,
-        }}>
-        <Text style={{color: COLOR.text_primary, textAlign: 'center'}}>
-          Add Stop to Route
-        </Text>
+        style={styles.addButton}
+        onPress={() => setShowAddBusModal(true)}
+      >
+        <Text style={styles.addButtonText}>Add Bus</Text>
       </TouchableOpacity>
 
-      <Text style={{fontWeight: 'bold', marginBottom: 5,color:COLOR.text_secondary}}>Route Preview:</Text>
-      {route.map((stop, index) => (
-        <View
-          key={index}
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            backgroundColor: COLOR.bg_secondary,
-            padding: 10,
-            borderRadius: 8,
-            marginBottom: 5,
-            flexWrap: 'wrap',
-          }}>
-          <Text style={{color: COLOR.text_secondary}}>
-            {index + 1}. {stop.name} — {stop.time} min
-          </Text>
-          <TouchableOpacity onPress={() => removeStop(stop._id,stop.time)}>
-            <Text style={{color: 'red'}}>Remove</Text>
-          </TouchableOpacity>
+      {/* Bus Details Modal */}
+      <Modal visible={showBusDetails} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {selectedBus && (
+              <>
+                <Text style={styles.modalTitle}>{selectedBus.name}</Text>
+                <Text style={styles.routeTitle}>Route:</Text>
+                {selectedBus.route.map((stop, index) => (
+                  <Text key={index} style={styles.routeItem}>
+                    {index + 1}. {stop}
+                  </Text>
+                ))}
+                <Button
+                  title="Delete Bus"
+                  color="red"
+                  onPress={() => handleDeleteBus(selectedBus.id)}
+                />
+                <Button title="Close" onPress={() => setShowBusDetails(false)} />
+              </>
+            )}
+          </View>
         </View>
-      ))}
+      </Modal>
 
-      <TouchableOpacity
-        onPress={handleSubmit}
-        style={{
-          backgroundColor: COLOR.golden,
-          padding: 12,
-          borderRadius: 10,
-          marginTop: 20,
-        }}>
-        <Text style={{color: COLOR.text_dark, textAlign: 'center', fontWeight: 'bold'}}>
-          Submit Bus
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+      {/* Custom Add Bus Modal */}
+      <Addbusform visible={showAddBusModal} onClose={() => setShowAddBusModal(false)} />
     </View>
   );
 };
 
-export default AddBusScreen;
+export default BusListScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  list: {
+    padding: 16,
+  },
+  busItem: {
+    backgroundColor: '#eee',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  busName: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  route: {
+    marginTop: 4,
+    color: '#555',
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    margin: 16,
+    position : 'relative',
+    top : -100
+
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  routeTitle: {
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  routeItem: {
+    marginBottom: 4,
+  },
+});
