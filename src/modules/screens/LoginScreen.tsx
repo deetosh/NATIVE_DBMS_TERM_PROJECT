@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform, PermissionsAndroid} from 'react-native';
 import Loader from '../../molecules/Loader';
+import { Image } from 'react-native';
 
 const requestLocationPermission = async (): Promise<boolean> => {
   if (Platform.OS === 'android') {
@@ -38,6 +39,7 @@ const LoginScreen = ({navigation}: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const getLocation = async () => {
     const hasPermission = await requestLocationPermission();
@@ -103,52 +105,79 @@ const LoginScreen = ({navigation}: any) => {
     }
   };
 
+  useEffect(() => {
+    const checkLogin = async () => {
+      const token = await AsyncStorage.getItem('accessToken');
+      setTimeout(()=>{
+        if (token) {
+          setIsLoggedIn(true);
+          navigation.replace('Main');
+        }
+        else{
+          setIsLoggedIn(false);
+        }
+      }, 2000); 
+    };
+    checkLogin();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Loader visible={isLoading} />
-      <Text style={styles.title}>Login</Text>
+      {isLoggedIn && (<>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Image 
+            source={require('../../assets/logo.png')}
+            style={{width: 400, height: 400}}
+          />
+          {/* <Text style={{fontSize:20, color: COLOR.golden}}>Welcome to IITKGP Bus Tracker</Text> */}
+        </View>
+      </>)}
+      {!isLoggedIn && (<>
+        <Loader visible={isLoading} />
+        <Text style={styles.title}>Login</Text>
 
-      <View style={styles.inputContainer}>
-        <Ionicons
-          name="mail-outline"
-          size={20}
-          color="white"
-          style={styles.icon}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          keyboardType="email-address"
-          value={email}
-          placeholderTextColor="gray"
-          onChangeText={setEmail}
-        />
-      </View>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="mail-outline"
+            size={20}
+            color="white"
+            style={styles.icon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            value={email}
+            placeholderTextColor="gray"
+            onChangeText={setEmail}
+          />
+        </View>
 
-      <View style={styles.inputContainer}>
-        <Ionicons
-          name="lock-closed-outline"
-          size={20}
-          color="white"
-          style={styles.icon}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          placeholderTextColor="gray"
-          onChangeText={setPassword}
-        />
-      </View>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="lock-closed-outline"
+            size={20}
+            color="white"
+            style={styles.icon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            value={password}
+            placeholderTextColor="gray"
+            onChangeText={setPassword}
+          />
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.link}>Don't have an account? Register</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.link}>Don't have an account? Register</Text>
+        </TouchableOpacity>
+      </>)} 
     </View>
   );
 };
