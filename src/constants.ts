@@ -1,4 +1,5 @@
 import { Region } from "react-native-maps"
+import { blue } from "react-native-reanimated/lib/typescript/Colors"
 
 export const COLOR = {
     bg_primary: "#000000",
@@ -11,7 +12,8 @@ export const COLOR = {
     btn_primary: "#bae3be",
     btn_secondary: "#f0c2c2",
     golden: "#cfc8ab",
-    my_color: "#8F9181"
+    my_color: "#8F9181",
+    bus_icon: "#1a73e8",
 }
 
 export const initialRegionMap : Region = {

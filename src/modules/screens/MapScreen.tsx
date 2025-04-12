@@ -19,6 +19,8 @@ import { COLOR } from '../../constants';
 import BusDetailsSheet from './BusDetailsBottomSheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faBus } from '@fortawesome/free-solid-svg-icons';
 
 type BusLocation = {
   bus_id: string;
@@ -162,20 +164,29 @@ const MapScreen: React.FC = () => {
           }>
           {Object.values(busLocations).map(bus => (
             <Marker
-              key={bus.bus_id}
-              coordinate={{
-                latitude: bus.latitude,
-                longitude: bus.longitude,
-              }}
-              >
+            key={bus.bus_id}
+            coordinate={{
+              latitude: bus.latitude,
+              longitude: bus.longitude,
+            }}
+            anchor={{ x: 0.5, y: 0.5 }} // Center the icon
+          >
+            <View style={styles.markerContainer}>
+              <FontAwesomeIcon 
+                icon={faBus} 
+                size={30} 
+                color={COLOR.bus_icon} 
+              />
+            </View>
               <Callout tooltip={true} onPress={() => handleSheetOpen(bus.bus_id, bus.bus_no)}>
-              <View style={{ padding: 10, backgroundColor: COLOR.bg_primary }}>
-                <Text style={{ fontWeight: 'bold',color: COLOR.text_secondary  }}>{bus.bus_no}</Text>
-                  <Text style={{ color: COLOR.text_secondary }}>Click for more details</Text>
-              </View>
+                <View style={styles.calloutContainer}>
+                  <Text style={styles.calloutTitle}>{bus.bus_no}</Text>
+                  <Text style={styles.calloutSubtitle}>Click for details</Text>
+                </View>
               </Callout>
             </Marker>
           ))}
+            
           {userLocation && (
             <>
               <Marker
@@ -239,7 +250,32 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
+  markerContainer: {
+    padding: 2,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLOR.bg_primary,
+  },
+  calloutContainer: {
+    backgroundColor: COLOR.bg_primary,
+    padding: 12,
+    width: 160,
+  },
+  calloutTitle: {
+    fontWeight: 'bold',
+    color: COLOR.text_secondary,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  calloutSubtitle: {
+    color: COLOR.text_secondary,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   mapStyle: {
     ...StyleSheet.absoluteFillObject,
   },
+
 });
