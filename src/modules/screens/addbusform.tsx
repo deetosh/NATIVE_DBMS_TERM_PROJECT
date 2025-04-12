@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 import Toast from 'react-native-toast-message';
+import {Picker} from '@react-native-picker/picker';
 import {COLOR} from '../../constants';
-import SearchableDropdown from '../../molecules/SearchableDropDown';
 import {callAPI} from '../../services/callApi';
 
 interface Location {
@@ -160,8 +160,7 @@ const Addbusform: React.FC<Props> = ({visible, onClose}) => {
       onBackButtonPress={onClose}
       style={{margin: 0, justifyContent: 'center'}}
       avoidKeyboard
-      backdropOpacity={0.6}
-    >
+      backdropOpacity={0.6}>
       <View style={styles.modalContainer}>
         <ScrollView contentContainerStyle={{padding: 20}}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -179,16 +178,18 @@ const Addbusform: React.FC<Props> = ({visible, onClose}) => {
           />
 
           <Text style={styles.label}>Select Location:</Text>
-          <SearchableDropdown
-            data={availableLocations.map(loc => ({
-              id: loc._id,
-              title: loc.name,
-            }))}
-            selected={selectedLocationId}
-            setSelected={setSelectedLocationId}
-            placeholder="Select Stop"
-            containerStyle={{marginBottom: 10}}
-          />
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={selectedLocationId}
+              onValueChange={(itemValue, itemIndex) => {
+                setSelectedLocationId(itemValue);
+              }}>
+              <Picker.Item label="Select Stop" value="" />
+              {availableLocations.map(loc => (
+                <Picker.Item key={loc._id} label={loc.name} value={loc._id} />
+              ))}
+            </Picker>
+          </View>
 
           <Text style={styles.label}>Arrival Time at Stop (in minutes):</Text>
           <TextInput
@@ -258,6 +259,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     color: COLOR.text_secondary,
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: COLOR.bg_tertiary,
+    borderRadius: 8,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
   addButton: {
     backgroundColor: COLOR.my_color,

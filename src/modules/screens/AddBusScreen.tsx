@@ -1,235 +1,162 @@
-import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Alert,
-  Button,
-} from 'react-native';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Button, Alert, ScrollView } from 'react-native';
+import { callAPI } from '../../services/callApi';
+import Loader from '../../molecules/Loader';
+import { COLOR } from '../../constants';
+import { BottomSheetModalProvider, BottomSheetModal } from '@gorhom/bottom-sheet';
 import Addbusform from './addbusform';
-import {callAPI} from '../../services/callApi';
 
-type Bus = {
-  id: string;
-  name: string;
-  route: string[];
-};
+const AddBusScreen = () => {
+  const [busData, setBusData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
-type Location = {
-  id: string;
-  name: string;
-};
-
-const BusListScreen = () => {
-  const [buses, setBuses] = useState<Bus[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
-  const [showBusDetails, setShowBusDetails] = useState(false);
-  const [showAddBusModal, setShowAddBusModal] = useState(false);
-
-  useEffect(() => {
-    fetchAllData();
+  const fetchAllBuses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await callAPI(`/bus/get`, 'GET', {}, {});
+      if (!response.isError) {
+        setBusData(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching bus details:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const fetchAllData = async () => {
-    try {
-      // Fetch buses and locations from API
-      // const busData = await api.get('/buses');
-      // const locationData = await api.get('/locations');
+  useEffect(() => {
+    fetchAllBuses();
+  }, [fetchAllBuses]);
 
-      // Placeholder data
-      const busData = [
-        {id: '1', name: 'Bus A', route: ['Stop 1', 'Stop 2', 'Stop 3']},
-        {id: '2', name: 'Bus B', route: ['Stop 2', 'Stop 4']},
-      ];
-      const locationData = [
-        {id: '1', name: 'Stop 1'},
-        {id: '2', name: 'Stop 2'},
-        {id: '3', name: 'Stop 3'},
-        {id: '4', name: 'Stop 4'},
-      ];
-
-      setBuses(busData);
-      setLocations(locationData);
-    } catch (err) {
-      console.error(err);
-    }
+  const handleAddBus = () => {
+    setIsBottomSheetOpen(true);
+    bottomSheetRef.current?.present();
   };
 
-  const handleBusPress = (bus: Bus) => {
-    setSelectedBus(bus);
-    setShowBusDetails(true);
+  const handleClose = () => {
+    setIsBottomSheetOpen(false);
+    bottomSheetRef.current?.dismiss();
+    fetchAllBuses();
   };
 
   const handleDeleteBus = async (busId: string) => {
-    try {
-      const response = await callAPI(`/bus/delete`, 'DELETE', null, {
-        id: busId,
-      });
-
-      if (response?.isError) {
-        Alert.alert('Error', response.message || 'Failed to delete the bus.');
-        return;
-      }
-
-      setBuses(prev => prev.filter(b => b.id !== busId));
-      setShowBusDetails(false);
-      Alert.alert('Deleted', 'Bus has been deleted.');
-    } catch (err) {
-      console.error('Delete Bus Error:', err);
-      Alert.alert('Error', 'Something went wrong while deleting the bus.');
-    }
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this bus?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await callAPI(`/bus/delete?id=${busId}`, 'DELETE', {}, {});
+              if (!response.isError) {
+                Alert.alert('Success', 'Bus deleted successfully.');
+                fetchAllBuses();
+              } else {
+                Alert.alert('Error', 'Failed to delete the bus.');
+              }
+            } catch (error) {
+              console.error('Delete failed:', error);
+              Alert.alert('Error', 'An error occurred while deleting the bus.');
+            }
+          },
+        },
+      ]
+    );
   };
 
-  const renderBusItem = ({item}: {item: Bus}) => (
-    <TouchableOpacity
-      style={styles.busItem}
-      onPress={() => handleBusPress(item)}>
-      <Text style={styles.busName}>{item.name}</Text>
-      <Text style={styles.route}>Route: {item.route.join(' → ')}</Text>
-    </TouchableOpacity>
-  );
-
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={buses}
-        keyExtractor={item => item.id}
-        renderItem={renderBusItem}
-        contentContainerStyle={styles.list}
-        ListFooterComponent={
-          selectedBus && showBusDetails ? (
-            <View style={styles.detailsCard}>
-              <Text style={styles.modalTitle}>{selectedBus.name}</Text>
-              <Text style={styles.routeTitle}>Route:</Text>
-              {selectedBus.route.map((stop, index) => (
-                <Text key={index} style={styles.routeItem}>
-                  {index + 1}. {stop}
-                </Text>
-              ))}
-              <View style={styles.detailsButtonRow}>
-  <View style={styles.buttonWrapper}>
-    <Button
-      title="Delete"
-      color="red"
-      onPress={() => handleDeleteBus(selectedBus.id)}
-    />
-  </View>
-  <View style={styles.buttonWrapper}>
-    <Button title="Close" onPress={() => setShowBusDetails(false)} />
-  </View>
-</View>
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        <Text style={styles.title}>Admin - Bus Details</Text>
+        <Loader visible={loading} />
 
-            </View>
-          ) : null
-        }
-      />
+        {!loading && busData.length > 0 ? (
+          <ScrollView style={styles.busList}>
+            {busData.map((bus: any) => (
+              <View key={bus._id} style={styles.busItem}>
+                <View style={styles.busInfoContainer}>
+                  <View style={styles.busText}>
+                    <Text style={styles.busNumber}>Bus Number: {bus.bus_number}</Text>
+                    <Text style={styles.driver}>Driver: {bus.driver?.username || 'N/A'}</Text>
+                  </View>
+                  <Button title="Delete" onPress={() => handleDeleteBus(bus._id)} color="red" />
+                </View>
+              </View>
+            ))}
+            <Button title="Add New Bus" onPress={handleAddBus} color={COLOR.golden} />
+          </ScrollView>
+        ) : !loading ? (
+          <Text style={styles.noBuses}>No buses available</Text>
+        ) : null}
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setShowAddBusModal(true)}>
-        <Text style={styles.addButtonText}>Add Bus</Text>
-      </TouchableOpacity>
+        
 
-      {/* Custom Add Bus Modal */}
-      <Addbusform
-        visible={showAddBusModal}
-        onClose={() => setShowAddBusModal(false)}
-      />
-    </View>
+        <BottomSheetModal
+          ref={bottomSheetRef}
+          index={0}
+          snapPoints={['50%']}
+          onDismiss={() => setIsBottomSheetOpen(false)}
+        >
+          <Addbusform visible={isBottomSheetOpen} onClose={handleClose} />
+        </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 
-export default BusListScreen;
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  list: {
     padding: 16,
+    backgroundColor: COLOR.bg_primary,
+    flex: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLOR.golden,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  busList: {
+    marginBottom: 16,
   },
   busItem: {
-    backgroundColor: '#eee',
-    padding: 16,
+    marginVertical: 8,
+    padding: 12,
     borderRadius: 8,
-    marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: COLOR.bg_tertiary,
+    backgroundColor: COLOR.bg_secondary,
   },
-  busName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-  },
-  route: {
-    marginTop: 4,
-    color: '#000',
-  },
-  addButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    margin: 16,
-    position: 'relative',
-    top: -100,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 24,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#000',
-  },
-  routeTitle: {
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#000',
-  },
-  routeItem: {
-    marginBottom: 4,
-    color: '#000',
-  },
-  detailsContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  detailsCard: {
-    backgroundColor: '#f2f2f2',
-    padding: 20,
-    borderRadius: 10,
-    marginTop: 12,
-    marginBottom: 32,
-  },
-  detailsButtonContainer: {
-    marginTop: 12,
-  },
-  detailsButtonRow: {
+  busInfoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
-    gap: 10,
+    alignItems: 'center',
   },
-  buttonWrapper: {
+  busText: {
     flex: 1,
+    paddingRight: 10,
   },
-  
+  busNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLOR.text_primary,
+  },
+  driver: {
+    fontSize: 14,
+    color: COLOR.text_secondary,
+  },
+  noBuses: {
+    fontSize: 16,
+    color: COLOR.text_secondary,
+    textAlign: 'center',
+    marginVertical: 20,
+  },
 });
+
+export default AddBusScreen;
