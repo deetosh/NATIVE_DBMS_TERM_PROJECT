@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Button,
 } from 'react-native';
 import Addbusform from './addbusform';
+import {callAPI} from '../../services/callApi';
 
 type Bus = {
   id: string;
@@ -41,14 +42,14 @@ const BusListScreen = () => {
 
       // Placeholder data
       const busData = [
-        { id: '1', name: 'Bus A', route: ['Stop 1', 'Stop 2', 'Stop 3'] },
-        { id: '2', name: 'Bus B', route: ['Stop 2', 'Stop 4'] },
+        {id: '1', name: 'Bus A', route: ['Stop 1', 'Stop 2', 'Stop 3']},
+        {id: '2', name: 'Bus B', route: ['Stop 2', 'Stop 4']},
       ];
       const locationData = [
-        { id: '1', name: 'Stop 1' },
-        { id: '2', name: 'Stop 2' },
-        { id: '3', name: 'Stop 3' },
-        { id: '4', name: 'Stop 4' },
+        {id: '1', name: 'Stop 1'},
+        {id: '2', name: 'Stop 2'},
+        {id: '3', name: 'Stop 3'},
+        {id: '4', name: 'Stop 4'},
       ];
 
       setBuses(busData);
@@ -65,18 +66,28 @@ const BusListScreen = () => {
 
   const handleDeleteBus = async (busId: string) => {
     try {
-      // Delete API call here
-      // await api.delete(`/buses/${busId}`);
-      setBuses((prev) => prev.filter((b) => b.id !== busId));
+      const response = await callAPI(`/bus/delete`, 'DELETE', null, {
+        id: busId,
+      });
+
+      if (response?.isError) {
+        Alert.alert('Error', response.message || 'Failed to delete the bus.');
+        return;
+      }
+
+      setBuses(prev => prev.filter(b => b.id !== busId));
       setShowBusDetails(false);
       Alert.alert('Deleted', 'Bus has been deleted.');
     } catch (err) {
-      console.error(err);
+      console.error('Delete Bus Error:', err);
+      Alert.alert('Error', 'Something went wrong while deleting the bus.');
     }
   };
 
-  const renderBusItem = ({ item }: { item: Bus }) => (
-    <TouchableOpacity style={styles.busItem} onPress={() => handleBusPress(item)}>
+  const renderBusItem = ({item}: {item: Bus}) => (
+    <TouchableOpacity
+      style={styles.busItem}
+      onPress={() => handleBusPress(item)}>
       <Text style={styles.busName}>{item.name}</Text>
       <Text style={styles.route}>Route: {item.route.join(' → ')}</Text>
     </TouchableOpacity>
@@ -86,45 +97,48 @@ const BusListScreen = () => {
     <View style={styles.container}>
       <FlatList
         data={buses}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={renderBusItem}
         contentContainerStyle={styles.list}
+        ListFooterComponent={
+          selectedBus && showBusDetails ? (
+            <View style={styles.detailsCard}>
+              <Text style={styles.modalTitle}>{selectedBus.name}</Text>
+              <Text style={styles.routeTitle}>Route:</Text>
+              {selectedBus.route.map((stop, index) => (
+                <Text key={index} style={styles.routeItem}>
+                  {index + 1}. {stop}
+                </Text>
+              ))}
+              <View style={styles.detailsButtonRow}>
+  <View style={styles.buttonWrapper}>
+    <Button
+      title="Delete"
+      color="red"
+      onPress={() => handleDeleteBus(selectedBus.id)}
+    />
+  </View>
+  <View style={styles.buttonWrapper}>
+    <Button title="Close" onPress={() => setShowBusDetails(false)} />
+  </View>
+</View>
+
+            </View>
+          ) : null
+        }
       />
 
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => setShowAddBusModal(true)}
-      >
+        onPress={() => setShowAddBusModal(true)}>
         <Text style={styles.addButtonText}>Add Bus</Text>
       </TouchableOpacity>
 
-      {/* Bus Details Modal */}
-      <Modal visible={showBusDetails} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {selectedBus && (
-              <>
-                <Text style={styles.modalTitle}>{selectedBus.name}</Text>
-                <Text style={styles.routeTitle}>Route:</Text>
-                {selectedBus.route.map((stop, index) => (
-                  <Text key={index} style={styles.routeItem}>
-                    {index + 1}. {stop}
-                  </Text>
-                ))}
-                <Button
-                  title="Delete Bus"
-                  color="red"
-                  onPress={() => handleDeleteBus(selectedBus.id)}
-                />
-                <Button title="Close" onPress={() => setShowBusDetails(false)} />
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
-
       {/* Custom Add Bus Modal */}
-      <Addbusform visible={showAddBusModal} onClose={() => setShowAddBusModal(false)} />
+      <Addbusform
+        visible={showAddBusModal}
+        onClose={() => setShowAddBusModal(false)}
+      />
     </View>
   );
 };
@@ -148,10 +162,11 @@ const styles = StyleSheet.create({
   busName: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#000',
   },
   route: {
     marginTop: 4,
-    color: '#555',
+    color: '#000',
   },
   addButton: {
     backgroundColor: '#007AFF',
@@ -159,9 +174,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     margin: 16,
-    position : 'relative',
-    top : -100
-
+    position: 'relative',
+    top: -100,
   },
   addButtonText: {
     color: '#fff',
@@ -183,12 +197,39 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#000',
   },
   routeTitle: {
     fontWeight: '600',
     marginBottom: 8,
+    color: '#000',
   },
   routeItem: {
     marginBottom: 4,
+    color: '#000',
   },
+  detailsContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  detailsCard: {
+    backgroundColor: '#f2f2f2',
+    padding: 20,
+    borderRadius: 10,
+    marginTop: 12,
+    marginBottom: 32,
+  },
+  detailsButtonContainer: {
+    marginTop: 12,
+  },
+  detailsButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 10,
+  },
+  buttonWrapper: {
+    flex: 1,
+  },
+  
 });
