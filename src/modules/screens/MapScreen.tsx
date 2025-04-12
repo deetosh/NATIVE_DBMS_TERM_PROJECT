@@ -197,7 +197,7 @@ const MapScreen: React.FC = () => {
       <BottomSheet
         ref={sheetRef}
         index={-1}
-        snapPoints={useMemo(() => ['80%'], [])}
+        snapPoints={useMemo(() => ['80%','100%'], [])}
         enablePanDownToClose={true}
         backgroundStyle={{
           backgroundColor: COLOR.bg_primary,

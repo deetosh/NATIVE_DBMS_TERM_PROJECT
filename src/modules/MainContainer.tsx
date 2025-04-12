@@ -13,6 +13,7 @@ import AddLocationScreen from './screens/AddLocationScreen';
 import AddBusScreen from './screens/AddBusScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import AssignDriverScreen from './screens/AssignDriverScreen';
 
 // Screen name
 const HOME_SCREEN = 'Drive';
@@ -21,6 +22,7 @@ const MAP_SCREEN = 'Map';
 const LOCATION_SCREEN = 'Location';
 const BUSES_SCREEN = 'Buses';
 const PROFILE_SCREEN = 'Profile';
+const ASSIGN_DRIVER_SCREEN = 'Driver';
 
 const Tab = createBottomTabNavigator();
 
@@ -76,6 +78,9 @@ const MainContainer = () => {
                   break;
                 case PROFILE_SCREEN:
                   iconName = focused ? 'person' : 'person-outline';
+                  break;
+                case ASSIGN_DRIVER_SCREEN:
+                  iconName = focused ? 'man' : 'man-outline';
                   break;
               }
               return (
@@ -137,6 +142,10 @@ const MainContainer = () => {
               <Tab.Screen
                 name={LOCATION_SCREEN}
                 component={AddLocationScreen}
+              />
+              <Tab.Screen
+                name={ASSIGN_DRIVER_SCREEN}
+                component={AssignDriverScreen}
               />
               <Tab.Screen name={BUSES_SCREEN} component={AddBusScreen} />
             </>

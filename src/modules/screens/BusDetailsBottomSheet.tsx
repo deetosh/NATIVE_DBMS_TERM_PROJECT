@@ -106,7 +106,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     height: 300,
-    flex: 1,
   },
   stopItem: {
     paddingVertical: 8,
