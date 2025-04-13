@@ -15,6 +15,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AssignDriverScreen from './screens/AssignDriverScreen';
 import AdminBusManageScreen from './screens/AdminBusScreen';
+import { withBusProvider } from '../context/ProviderWrapper';
 
 // Screen name
 const HOME_SCREEN = 'Drive';
@@ -134,7 +135,7 @@ const MainContainer = () => {
             <>
               <Tab.Screen
                 name={BUS_DETAILS_SCREEN}
-                component={BusDetailsScreen}
+                component={withBusProvider(BusDetailsScreen)}
               />
               <Tab.Screen name={MAP_SCREEN} component={MapScreen} />
             </>

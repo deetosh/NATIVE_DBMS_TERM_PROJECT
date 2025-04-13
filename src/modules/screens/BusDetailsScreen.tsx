@@ -8,6 +8,8 @@ import {Picker} from '@react-native-picker/picker';
 import {COLOR} from '../../constants';
 import { ScrollView } from 'react-native-gesture-handler';
 import SearchableDropdown from '../../molecules/SearchableDropDown';
+import { useBusContext } from '../../context/BusContext';
+import Toast from 'react-native-toast-message';
 
 const BusDetailsScreen = () => {
   const [busData, setBusData] = useState<any | null>(null);
@@ -16,6 +18,7 @@ const BusDetailsScreen = () => {
   const [allBuses, setAllBuses] = useState<any[]>([]); // Replace with actual bus data fetching logic
   const currentHour = new Date().getHours();
 
+  const {getAllBusesFromStorage,getBusDetailsFromStorage} = useBusContext();
   // useEffect(() => {
   //   const fetchBus = async () => {
   //     try {
@@ -36,6 +39,17 @@ const BusDetailsScreen = () => {
   // }, [busId]);
 
   useEffect(() => {
+    const fetchFromStorage = async () => {
+      setLoading(true);
+      const buses = await getAllBusesFromStorage();
+      if (buses) {
+        setAllBuses(buses);
+        console.log('***** Fetched buses from storage:', buses);
+        setLoading(false);
+      }else{
+        fetchAllBuses();
+      }
+    }
     const fetchAllBuses = async () => {
       try {
         setLoading(true);
@@ -44,17 +58,41 @@ const BusDetailsScreen = () => {
           console.log('Bus data:', response.data);
           setAllBuses(response.data);
         }
+        else{
+          Toast.show({
+            type: 'error',
+            text1: 'Make sure you are connected to the internet',
+            text2: 'Failed to fetch bus details.',
+          });
+        }
       } catch (err) {
-        console.error('Failed to fetch bus details', err);
+        Toast.show({
+          type: 'error',
+          text1: 'Make sure you are connected to the internet',
+          text2: 'Failed to fetch bus details.',
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllBuses();
+    fetchFromStorage();
   }, []);
 
   useEffect(() => {
+    const fetchBusDetailsFromStorage = async (busId: string) => {
+      setLoading(true);
+      const busDetails = await getBusDetailsFromStorage(busId);
+      if (busDetails) {
+        console.log('***** Fetched bus details from storage:', busDetails);
+        setBusData(busDetails);
+        setLoading(false);
+      }
+      else{
+        fetchBusDetails(busId);
+      }
+    };
+
     const fetchBusDetails = async (busId: string) => {
       try {
         setLoading(true);
@@ -67,16 +105,29 @@ const BusDetailsScreen = () => {
         if (!response.isError) {
           console.log('Bus data:', response.data);
           setBusData(response.data);
+        }else{
+          Toast.show({
+            type: 'error',
+            text1: 'Make sure you are connected to the internet',
+            text2: 'Failed to fetch bus details.',
+          });
+          setBusData(null);
         }
       } catch (err) {
         console.error('Failed to fetch bus details', err);
+        Toast.show({
+          type: 'error',
+          text1: 'Make sure you are connected to the internet',
+          text2: 'Failed to fetch bus details.',
+        });
+        setBusData(null);
       } finally {
         setLoading(false);
       }
     };
 
     if (selectedBusId) {
-      fetchBusDetails(selectedBusId);
+      fetchBusDetailsFromStorage(selectedBusId);
     }
   }, [selectedBusId]);
 
