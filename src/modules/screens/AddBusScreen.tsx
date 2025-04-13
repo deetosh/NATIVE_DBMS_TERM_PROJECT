@@ -157,6 +157,7 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
         });
         setBusNo('');
         setRoute([]);
+        handleClose(true);
       } else {
         Toast.show({
           type: 'error',
