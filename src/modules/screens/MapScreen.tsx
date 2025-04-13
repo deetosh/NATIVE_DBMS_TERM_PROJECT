@@ -121,7 +121,6 @@ const MapScreen: React.FC = () => {
     });
 
     socket.on('bus:locationUpdate', (data: BusLocation) => {
-      console.log('*****************')
       setBusLocations(prev => ({
         ...prev,
         [data.bus_id]: data, // Update each bus by its unique ID
@@ -129,21 +128,13 @@ const MapScreen: React.FC = () => {
     });
 
     socket.on('bus:stopped',(bus_id:string)=> {
-      // remove the bus with this id from array
-      console.log("%%%%%%%%%%%%%%%%%%%%%%%%",bus_id);
-      console.log('buslocations',busLocations);
       
       const filteredList: Record<string,BusLocation> = {}
       for (const key in busLocations) {
-        console.log('key',key);
         if (key != bus_id) {
           filteredList[key] = busLocations[key];
         }
-        else{
-          console.log('bus removed',key);
-        }
       }
-      console.log('filteredList',filteredList);
       setBusLocations(filteredList);
     })
 
