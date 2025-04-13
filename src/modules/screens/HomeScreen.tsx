@@ -83,6 +83,7 @@ const HomeScreen: React.FC = () => {
         watchId.current = null;
       }
       if (socketRef.current) {
+        socketRef.current.emit('driver:stop',{bus_id : BusDetails.bus_id})
         socketRef.current.disconnect();
         socketRef.current = null;
       }

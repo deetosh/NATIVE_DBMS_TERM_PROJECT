@@ -5,6 +5,7 @@ import {
   Platform,
   SafeAreaView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -21,6 +22,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faBus } from '@fortawesome/free-solid-svg-icons';
+import { callAPI } from '../../services/callApi';
 
 type BusLocation = {
   bus_id: string;
@@ -28,6 +30,16 @@ type BusLocation = {
   latitude: number;
   longitude: number;
 };
+
+interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+interface Location {
+  name: string;
+  coordinates: number[];
+}
 
 const MapScreen: React.FC = () => {
   const [busLocations, setBusLocations] = useState<Record<string, BusLocation>>(
@@ -40,6 +52,8 @@ const MapScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const sheetRef = useRef<any>(null);
   const [selectedBus, setSelectedBus] = useState<any | null>(null);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [seeLocation, setSeeLocation] = useState<boolean>(false);
 
   // Ask permission on Android
   const requestLocationPermission = async () => {
@@ -113,6 +127,16 @@ const MapScreen: React.FC = () => {
       }));
     });
 
+    socket.on('bus:stopped',(bus_id:string)=> {
+      // remove the bus with this id from array
+      console.log("%%%%%%%%%%%%%%%%%%%%%%%%");
+      setBusLocations(prev => {
+        const updatedLocations = {...prev};
+        delete updatedLocations[bus_id];
+        return updatedLocations;
+      });
+    })
+
     socket.on('disconnect', () => {
       console.log('Disconnected from socket server');
     });
@@ -139,6 +163,33 @@ const MapScreen: React.FC = () => {
         sheetRef.current?.snapToIndex(0);
     }
   },[selectedBus])
+
+  useEffect(()=> {
+      const fetchLocations = async () => {
+        try {
+          setIsLoading(true);
+          const response = await callAPI('/location/get', "GET");
+          if (!response.isError) {
+            setAllLocations(response.data);
+          } else {
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Failed to fetch locations. Please try again.',
+            });
+          }
+          setIsLoading(false);
+        } catch (error) {
+          setIsLoading(false);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Failed to fetch locations. Please try again.',
+          });
+        }
+      };
+      fetchLocations();
+  },[])
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -203,7 +254,40 @@ const MapScreen: React.FC = () => {
               />
             </>
           )}
+
+          {
+            seeLocation && allLocations.map((location, index) => (
+              <Marker
+                key={index}
+                coordinate={{
+                  latitude: location.coordinates[0],
+                  longitude: location.coordinates[1],
+                }}
+                title={location.name}
+                pinColor= 'orange'
+                
+              >
+                <Callout tooltip={true}>
+                  <View style={styles.calloutContainer2}>
+                    <Text style={styles.calloutTitle2}>{location.name}</Text>
+                  </View>
+                </Callout>
+              </Marker>
+            ))
+          }
         </MapView>
+        <View style={{position: 'absolute', top: 10, left: 10,display: 'flex', flexDirection: 'row',backgroundColor: COLOR.bg_primary, padding: 10, borderRadius: 10}}>
+          <Switch
+            trackColor={{false: COLOR.bg_tertiary, true: COLOR.golden}}
+            thumbColor={seeLocation ? COLOR.bg_tertiary : COLOR.golden}
+            onValueChange={() => setSeeLocation(!seeLocation)}
+            value={seeLocation}
+          />
+          <Text style={{color: COLOR.text_primary, fontSize: 16, marginLeft: 10}}>
+            See Bus Stoppages
+          </Text>
+        </View>
+        
       </View>
       <BottomSheet
         ref={sheetRef}
@@ -262,10 +346,23 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.bg_primary,
     padding: 12,
     width: 160,
+    borderRadius: 20,
+  },
+  calloutContainer2: {
+    backgroundColor: COLOR.text_tertiary,
+    padding: 5,
+    borderRadius: 10,
+    width: 160,
   },
   calloutTitle: {
     fontWeight: 'bold',
     color: COLOR.text_secondary,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  calloutTitle2: {
+    fontWeight: 'bold',
+    color: COLOR.text_dark,
     fontSize: 16,
     textAlign: 'center',
   },
