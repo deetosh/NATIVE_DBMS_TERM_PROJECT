@@ -5,12 +5,13 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {callAPI} from '../../services/callApi';
 import Toast from 'react-native-toast-message';
-import { COLOR } from '../../constants';
-import SearchableDropdown, {  } from '../../molecules/SearchableDropDown';
+import {COLOR} from '../../constants';
+import SearchableDropdown from '../../molecules/SearchableDropDown';
 
 interface Location {
   _id: string;
@@ -23,10 +24,16 @@ interface Stop {
   time: number;
 }
 
-const AddBusScreen: React.FC = () => {
+interface Prop {
+  handleClose: (flag?: boolean) => void;
+}
+
+const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
   const [busNo, setBusNo] = useState<string>('');
   const [availableLocations, setAvailableLocations] = useState<Location[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<string|null>('');
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
+    '',
+  );
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [route, setRoute] = useState<Stop[]>([]);
   // const dropdownRef = useRef<SearchableDropdownRef>(null);
@@ -69,7 +76,7 @@ const AddBusScreen: React.FC = () => {
     }
 
     const arrivalTimeNum = parseInt(arrivalTime);
-    if(arrivalTimeNum < 0 || arrivalTimeNum >=60) {
+    if (arrivalTimeNum < 0 || arrivalTimeNum >= 60) {
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -97,8 +104,11 @@ const AddBusScreen: React.FC = () => {
     if (!location) return;
 
     // insert the new stop in ascending order with respect to time
-    
-    const newRoute = [...route, { _id: location._id, name: location.name, time: arrivalTimeNum }];
+
+    const newRoute = [
+      ...route,
+      {_id: location._id, name: location.name, time: arrivalTimeNum},
+    ];
     newRoute.sort((a, b) => a.time - b.time);
     setRoute(newRoute);
 
@@ -115,7 +125,7 @@ const AddBusScreen: React.FC = () => {
     setArrivalTime('');
   };
 
-  const removeStop = (id: string,time:number) => {
+  const removeStop = (id: string, time: number) => {
     setRoute(route.filter(stop => stop._id !== id || stop.time !== time));
   };
 
@@ -165,28 +175,58 @@ const AddBusScreen: React.FC = () => {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor:COLOR.bg_primary}}>
-    <ScrollView contentContainerStyle={{padding: 20}} style={{flex: 1,backgroundColor: COLOR.bg_primary, marginBottom:100}}>
-      <Text style={{fontSize: 22, fontWeight: 'bold', marginBottom: 10, color: COLOR.golden, textAlign: 'center'}}>
-        Add a New Bus
-      </Text>
+    <View style={{flex: 1, backgroundColor: COLOR.bg_primary}}>
+      <View
+        style={{flex: 1, backgroundColor: COLOR.bg_primary, marginBottom: 100,padding:10}}>
+        <View style={{display: 'flex',flexDirection: 'row',alignItems: 'center'}}>
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: 'bold',
+              marginBottom: 10,
+              color: COLOR.golden,
+              textAlign: 'center',
+              flex:1
+            }}>
+            Add a New Bus
+          </Text>
+          <TouchableOpacity
+            onPress={() => handleClose()}
+            style={styles.closeButton}>
+            <Text style={styles.closeText}>✕</Text>
+          </TouchableOpacity>
+        </View>
 
-      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Bus Number:</Text>
-      <TextInput
-        value={busNo}
-        onChangeText={setBusNo}
-        placeholder="Enter Bus Number"
-        style={{
-          borderWidth: 1,
-          borderColor: COLOR.bg_tertiary,
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 10,
-        }}
-      />
+        <Text
+          style={{
+            marginTop: 10,
+            color: COLOR.text_secondary,
+            marginBottom: 10,
+          }}>
+          Bus Number:
+        </Text>
+        <TextInput
+          value={busNo}
+          onChangeText={setBusNo}
+          placeholder="Enter Bus Number"
+          style={{
+            borderWidth: 1,
+            borderColor: COLOR.bg_tertiary,
+            padding: 10,
+            borderRadius: 8,
+            marginBottom: 10,
+          }}
+        />
 
-      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Select Location:</Text>
-      {/* <View
+        <Text
+          style={{
+            marginTop: 10,
+            color: COLOR.text_secondary,
+            marginBottom: 10,
+          }}>
+          Select Location:
+        </Text>
+        {/* <View
         style={{
           borderWidth: 1,
           borderColor: COLOR.bg_tertiary,
@@ -205,84 +245,118 @@ const AddBusScreen: React.FC = () => {
         </Picker>
       </View> */}
 
-      <SearchableDropdown
-        // ref={dropdownRef}
-        data={availableLocations.map(loc => ({
-          id: loc._id,
-          title: loc.name,
-        }))}
-        selected={selectedLocationId}
-        setSelected={setSelectedLocationId}
-        placeholder="Select Bus"
-        containerStyle={{marginBottom: 10}}
-      />
+        <SearchableDropdown
+          // ref={dropdownRef}
+          data={availableLocations.map(loc => ({
+            id: loc._id,
+            title: loc.name,
+          }))}
+          selected={selectedLocationId}
+          setSelected={setSelectedLocationId}
+          placeholder="Select Bus"
+          containerStyle={{marginBottom: 10}}
+        />
 
-      <Text style={{marginTop: 10,color:COLOR.text_secondary,marginBottom:10}}>Arrival Time at Stop (in minutes):</Text>
-      <TextInput
-        value={arrivalTime}
-        onChangeText={setArrivalTime}
-        placeholder="e.g., 20"
-        keyboardType="numeric"
-        style={{
-          borderWidth: 1,
-          borderColor: COLOR.bg_tertiary,
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 10,
-          color :COLOR.text_secondary,
-        }}
-      />
-
-      <TouchableOpacity
-        onPress={addStop}
-        style={{
-          backgroundColor: COLOR.my_color,
-          padding: 10,
-          borderRadius: 8,
-          marginBottom: 20,
-        }}>
-        <Text style={{color: COLOR.text_primary, textAlign: 'center'}}>
-          Add Stop to Route
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={{fontWeight: 'bold', marginBottom: 5,color:COLOR.text_secondary}}>Route Preview:</Text>
-      {route.map((stop, index) => (
-        <View
-          key={index}
+        <Text
           style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            backgroundColor: COLOR.bg_secondary,
+            marginTop: 10,
+            color: COLOR.text_secondary,
+            marginBottom: 10,
+          }}>
+          Arrival Time at Stop (in minutes):
+        </Text>
+        <TextInput
+          value={arrivalTime}
+          onChangeText={setArrivalTime}
+          placeholder="e.g., 20"
+          keyboardType="numeric"
+          style={{
+            borderWidth: 1,
+            borderColor: COLOR.bg_tertiary,
             padding: 10,
             borderRadius: 8,
-            marginBottom: 5,
-            flexWrap: 'wrap',
-          }}>
-          <Text style={{color: COLOR.text_secondary}}>
-            {index + 1}. {stop.name} — {stop.time} min
-          </Text>
-          <TouchableOpacity onPress={() => removeStop(stop._id,stop.time)}>
-            <Text style={{color: 'red'}}>Remove</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
+            marginBottom: 10,
+            color: COLOR.text_secondary,
+          }}
+        />
 
-      <TouchableOpacity
-        onPress={handleSubmit}
-        style={{
-          backgroundColor: COLOR.golden,
-          padding: 12,
-          borderRadius: 10,
-          marginTop: 20,
-        }}>
-        <Text style={{color: COLOR.text_dark, textAlign: 'center', fontWeight: 'bold'}}>
-          Submit Bus
+        <TouchableOpacity
+          onPress={addStop}
+          style={{
+            backgroundColor: COLOR.my_color,
+            padding: 10,
+            borderRadius: 8,
+            marginBottom: 20,
+          }}>
+          <Text style={{color: COLOR.text_primary, textAlign: 'center'}}>
+            Add Stop to Route
+          </Text>
+        </TouchableOpacity>
+
+        <Text
+          style={{
+            fontWeight: 'bold',
+            marginBottom: 5,
+            color: COLOR.text_secondary,
+          }}>
+          Route Preview:
         </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={{height:180}}>
+        <ScrollView contentContainerStyle={{padding:10}}>
+        {route.map((stop, index) => (
+          <View
+            key={index}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              backgroundColor: COLOR.bg_secondary,
+              padding: 10,
+              borderRadius: 8,
+              marginBottom: 5,
+              flexWrap: 'wrap',
+            }}>
+            <Text style={{color: COLOR.text_secondary}}>
+              {index + 1}. {stop.name} — {stop.time} min
+            </Text>
+            <TouchableOpacity onPress={() => removeStop(stop._id, stop.time)}>
+              <Text style={{color: 'red'}}>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        </ScrollView>
+
+        </View>
+        
+        <TouchableOpacity
+          onPress={handleSubmit}
+          style={{
+            backgroundColor: COLOR.golden,
+            padding: 12,
+            borderRadius: 10,
+            marginTop: 20,
+          }}>
+          <Text
+            style={{
+              color: COLOR.text_dark,
+              textAlign: 'center',
+              fontWeight: 'bold',
+            }}>
+            Submit Bus
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
+const styles = StyleSheet.create({
+  closeButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 10,
+  },
+  closeText: {
+    fontSize: 22,
+    color: COLOR.text_secondary,
+  },
+});
 export default AddBusScreen;

@@ -14,6 +14,7 @@ import AddBusScreen from './screens/AddBusScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AssignDriverScreen from './screens/AssignDriverScreen';
+import AdminBusManageScreen from './screens/AdminBusScreen';
 
 // Screen name
 const HOME_SCREEN = 'Drive';
@@ -106,12 +107,13 @@ const MainContainer = () => {
               backgroundColor: COLOR.text_tertiary,
               height: 60 + insets.bottom,
               marginHorizontal: 25,
-              marginVertical: 20,
+              // marginVertical: 20,
               borderWidth: 1,
               borderRadius: 30,
               borderColor: COLOR.bg_primary,
               // height: 60,
             },
+            tabBarHideOnKeyboard: true,
             headerShown: false,
             headerStyle: {
               backgroundColor: COLOR.bg_secondary,
@@ -147,7 +149,7 @@ const MainContainer = () => {
                 name={ASSIGN_DRIVER_SCREEN}
                 component={AssignDriverScreen}
               />
-              <Tab.Screen name={BUSES_SCREEN} component={AddBusScreen} />
+              <Tab.Screen name={BUSES_SCREEN} component={AdminBusManageScreen} />
             </>
           )}
           {role === 'driver' && (
