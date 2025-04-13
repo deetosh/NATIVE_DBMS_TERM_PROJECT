@@ -43,7 +43,7 @@ const SearchableDropdown: React.FC<Props> = ({
 
   return (
     <AutocompleteDropdown
-      clearOnFocus={true}
+      clearOnFocus={false}
       closeOnBlur={true}
       closeOnSubmit={false}
       dataSet={data}
@@ -51,7 +51,12 @@ const SearchableDropdown: React.FC<Props> = ({
       onSelectItem={handleSelect}
       textInputProps={{
         placeholder,
+        placeholderTextColor: COLOR.text_tertiary,
         style: styles.input,
+      }}
+      suggestionsListTextStyle={{
+        color: COLOR.text_tertiary,
+        fontSize: 16,
       }}
       inputContainerStyle={styles.inputContainer}
       suggestionsListContainerStyle={styles.suggestionsContainer}

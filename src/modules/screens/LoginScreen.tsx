@@ -91,7 +91,7 @@ const LoginScreen = ({navigation}: any) => {
       AsyncStorage.setItem('name', response.data.user.username);
       AsyncStorage.setItem('email', response.data.user.email);
       setIsLoading(false);
-      navigation.navigate('Main');
+      navigation.replace('Main');
       setEmail('');
       setPassword('');
     } else {

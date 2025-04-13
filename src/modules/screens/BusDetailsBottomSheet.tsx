@@ -57,7 +57,8 @@ export default function BusDetails({ busId, busNumber }: Props) {
                   Location: {stop?.location?.name ?? ''}
                 </Text>
                 <Text style={styles.stopText}>
-                  Arrival Time: {currentHour}:{stop?.time?.toString().padStart(2, '0') ?? ''}
+                  Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour : 7}
+                  :{stop?.time?.toString().padStart(2, '0') ?? ''}
                 </Text>
               </View>
             ))}

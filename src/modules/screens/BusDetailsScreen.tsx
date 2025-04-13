@@ -134,6 +134,7 @@ const BusDetailsScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bus Details</Text>
+      <Text style={{color: COLOR.text_tertiary,textAlign:'center',fontSize:16,marginBottom:10}}>* Buses run from 7AM to 6PM</Text>
       <Loader visible={loading} />
       {/* <View style={styles.pickerContainer}>
         <Ionicons
@@ -210,7 +211,7 @@ const BusDetailsScreen = () => {
                 Location: {stop?.location?.name ?? ''}
               </Text>
               <Text style={styles.stopTime}>
-                Arrival Time: {currentHour}:
+                Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour : 7}:
                 {stop?.time?.toString().padStart(2, '0') ?? ''}
               </Text>
             </View>
@@ -225,7 +226,7 @@ const BusDetailsScreen = () => {
 
 const styles = StyleSheet.create({
   container: {backgroundColor: COLOR.bg_primary, padding: 16, flex: 1},
-  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 25,color: COLOR.golden,textAlign: 'center'},
+  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 10,color: COLOR.golden,textAlign: 'center'},
   info: {fontSize: 16, marginBottom: 8,color: COLOR.golden},
   stopItem: {
     marginVertical: 8,
