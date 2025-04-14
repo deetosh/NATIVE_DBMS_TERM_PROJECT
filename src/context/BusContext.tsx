@@ -43,6 +43,9 @@ interface BusContextType {
   lastUpdated: string | null;
   getAllBusesFromStorage: () => Promise<any | null>;
   getBusDetailsFromStorage : (busId: string) => Promise<Bus | null>;
+  getAllLocationsFromStorage: () => Promise<any | null>;
+  getAllBusesMatchingLocationFromStorage: (locationId: string) => Promise<any | null>;
+
 }
 
 const BusContext = createContext<BusContextType | null>(null);
@@ -58,12 +61,16 @@ export const useBusContext = () => {
 const BUS_DATA_KEY = 'BUS_DATA';
 const BUS_TIMESTAMP_KEY = 'BUS_TIMESTAMP';
 
+const LOC_DATA_KEY = 'LOC_DATA';
+const LOC_TIMESTAMP_KEY = 'LOC_TIMESTAMP';
+
 interface BusProviderProps {
   children: ReactNode;
 }
 
 export const BusProvider: React.FC<BusProviderProps> = ({ children }) => {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [locData, setLocData] = useState<string|null>(null);
 
   // Function to fetch and store buses data
   const fetchAndStoreBuses = async () => {
@@ -88,6 +95,25 @@ export const BusProvider: React.FC<BusProviderProps> = ({ children }) => {
     }
   };
 
+  const fetchAndStoreLocations = async () => {  
+    try {
+      const response = await callAPI('/locations/getAll','GET');
+      if (response.isError) {
+        console.error('Error fetching bus data:', response.message);
+        return;
+      }
+      const data = response.data;
+      const timestamp = new Date().toISOString();
+      // Store fetched data in AsyncStorage
+      await AsyncStorage.setItem(LOC_DATA_KEY, JSON.stringify(data));
+      await AsyncStorage.setItem(LOC_TIMESTAMP_KEY, timestamp);
+
+      setLastUpdated(timestamp);
+    } catch (error) {
+      console.error('Failed to fetch bus data:', error);
+    }
+  }
+
   const getAllBusesFromStorage = async () => {
     try {
       const storedData = await AsyncStorage.getItem(BUS_DATA_KEY);
@@ -106,6 +132,40 @@ export const BusProvider: React.FC<BusProviderProps> = ({ children }) => {
       return null;
     }
   };
+  const getAllBusesMatchingLocationFromStorage= async (locationId: string) => {
+    try {
+      const storedData = await AsyncStorage.getItem(BUS_DATA_KEY);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData).filter((bus: Bus) => {
+          return bus.stoppage.some((stop: Stop) => stop.location._id === locationId);
+        });
+        return parsedData;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to load bus data from AsyncStorage:', error);
+      return null;
+    }
+  }
+  const getAllLocationsFromStorage = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem(LOC_DATA_KEY);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData).map((loc: Location) => {
+          return {
+            _id: loc._id,
+            name: loc.name,
+          }
+        });
+        return parsedData;
+      }
+      return null;
+    }
+    catch (error) {
+      console.error('Failed to load location data from AsyncStorage:', error);
+      return null;
+    }
+  }
 
   const getBusDetailsFromStorage = async (busId: string) => {
     try {
@@ -135,13 +195,14 @@ export const BusProvider: React.FC<BusProviderProps> = ({ children }) => {
       }
       if(isStale) {
         await fetchAndStoreBuses();
+        await fetchAndStoreLocations(); 
       }
     };
     initialize();
   }, []); // Re-run effect if buses state changes
 
   return (
-    <BusContext.Provider value={{lastUpdated, getAllBusesFromStorage, getBusDetailsFromStorage}}>
+    <BusContext.Provider value={{lastUpdated, getAllBusesFromStorage, getBusDetailsFromStorage, getAllLocationsFromStorage, getAllBusesMatchingLocationFromStorage}}>
       {children}
     </BusContext.Provider>
   );

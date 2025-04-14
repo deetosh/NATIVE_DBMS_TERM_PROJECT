@@ -1,5 +1,5 @@
 // components/BusDetails.tsx
-import React, {useEffect, useState} from 'react';
+import React, {use, useEffect, useState} from 'react';
 import {View, Text, ActivityIndicator, StyleSheet, TextInput} from 'react-native';
 import {callAPI} from '../../services/callApi'; // replace with your actual API helper
 import Loader from '../../molecules/Loader';
@@ -16,9 +16,13 @@ const BusDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null); // Replace with actual bus ID fetching logic
   const [allBuses, setAllBuses] = useState<any[]>([]); // Replace with actual bus data fetching logic
+  const [tempBus, setTempBus] = useState<any[]>([]); // Replace with actual bus data fetching logic
+  const [dest, setDest] = useState<string | null>(null); // Replace with actual destination fetching logic
+  const [allLocations, setAllLocations] = useState<any[]>([]); // Replace with actual locations fetching logic
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null); // Replace with actual location ID fetching logic
   const currentHour = new Date().getHours();
 
-  const {getAllBusesFromStorage,getBusDetailsFromStorage} = useBusContext();
+  const {getAllBusesFromStorage,getBusDetailsFromStorage,getAllLocationsFromStorage,getAllBusesMatchingLocationFromStorage} = useBusContext();
   // useEffect(() => {
   //   const fetchBus = async () => {
   //     try {
@@ -42,21 +46,29 @@ const BusDetailsScreen = () => {
     const fetchFromStorage = async () => {
       setLoading(true);
       const buses = await getAllBusesFromStorage();
-      if (buses) {
+      const locations = await getAllLocationsFromStorage();
+      if (buses && locations) {
         setAllBuses(buses);
+        setTempBus(buses);
+        setAllLocations(locations);
         console.log('***** Fetched buses from storage:', buses);
         setLoading(false);
       }else{
-        fetchAllBuses();
+        fetchAllBusesAndLocations();
       }
     }
-    const fetchAllBuses = async () => {
+    
+    const fetchAllBusesAndLocations = async () => {
       try {
         setLoading(true);
         const response = await callAPI(`/bus/get`, 'GET', {}, {});
-        if (!response.isError) {
+        const locResponse = await callAPI(`/location/get`, 'GET', {}, {});
+        if (!response.isError && !locResponse.isError) {
+          console.log('Locations data:', locResponse.data);
           console.log('Bus data:', response.data);
           setAllBuses(response.data);
+          setTempBus(response.data);
+          setAllLocations(locResponse.data);
         }
         else{
           Toast.show({
@@ -130,6 +142,43 @@ const BusDetailsScreen = () => {
       fetchBusDetailsFromStorage(selectedBusId);
     }
   }, [selectedBusId]);
+  
+  useEffect(() => {
+    const filterBusesByDestinationFromStorage = async (destination:string) => {
+      setLoading(true);
+      const buses = await getAllBusesMatchingLocationFromStorage(destination);
+      if (buses) {
+        // setTempBus(buses);
+        setAllBuses(buses);
+        console.log('***** Fetched buses from storage:', buses);
+        // filterBusesByDestination();
+      }
+      else{
+        filterBusesByDestination();
+      }
+      setLoading(false);
+    }
+
+    const filterBusesByDestination = async () => {
+      setLoading(true);
+      if (dest) {
+        const filteredBuses= await callAPI(`/bus/getByDestination`, 'GET', {}, {destination: dest});
+        setAllBuses(filteredBuses.data);
+      } else {
+        setAllBuses(tempBus);
+      }
+      setLoading(false);
+    };
+    if(dest){
+      filterBusesByDestinationFromStorage(dest);
+      setBusData(null);
+      setSelectedBusId(null);
+    }else{
+      setAllBuses(tempBus);
+      setBusData(null);
+      setSelectedBusId(null);
+    }
+  }, [dest]);
 
   return (
     <View style={styles.container}>
@@ -166,13 +215,24 @@ const BusDetailsScreen = () => {
         </Picker>
       </View> */}
       <SearchableDropdown
+        data={allLocations.map(loc => ({
+          id: loc._id,
+          title: loc.name,
+        }))}
+        selected={selectedLocationId}
+        setSelected={setDest}
+        placeholder="Select Destination"
+        containerStyle={{marginBottom: 10}}
+      />
+      <SearchableDropdown
         data={allBuses.map(bus => ({
           id: bus._id,
           title: bus.bus_number,
         }))}
+        selected={selectedBusId}
         setSelected={setSelectedBusId}
         placeholder="Select Bus"
-        containerStyle={{marginBottom: 20}}
+        containerStyle={{marginBottom: 10}}
       />
 
       {selectedBusId && busData && (
@@ -203,7 +263,7 @@ const BusDetailsScreen = () => {
           />
          
           <Text style={styles.stoppage}> Stopagges </Text>
-          <View style={{height:'50%',borderWidth:0.5,borderColor:COLOR.bg_tertiary,padding:20,borderRadius:10}}>
+          <View style={{height:'40%',borderWidth:0.5,borderColor:COLOR.bg_tertiary,padding:20,borderRadius:10}}>
           <ScrollView>
           {busData?.stoppage && busData.stoppage.map((stop: any, index: number) => (
             <View key={index} style={styles.stopItem}>
@@ -262,7 +322,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 12,
-    marginTop: 20,
+    marginTop: 10,
     color: COLOR.golden,
     textAlign: 'center',
   },
@@ -273,7 +333,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     paddingHorizontal: 10,
     borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 0,
     color: COLOR.text_primary,
     fontSize: 16,
   },
