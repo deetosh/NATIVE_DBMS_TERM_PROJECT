@@ -10,6 +10,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import SearchableDropdown from '../../molecules/SearchableDropDown';
 import { useBusContext } from '../../context/BusContext';
 import Toast from 'react-native-toast-message';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const BusDetailsScreen = () => {
   const [busData, setBusData] = useState<any | null>(null);
@@ -97,7 +98,12 @@ const BusDetailsScreen = () => {
       const busDetails = await getBusDetailsFromStorage(busId);
       if (busDetails) {
         console.log('***** Fetched bus details from storage:', busDetails);
-        setBusData(busDetails);
+        let data=busDetails;
+        data = converttotime(data);
+        data.stoppage.sort((a: any, b: any) => {
+          return a.time - b.time;
+        });
+        setBusData(data);
         setLoading(false);
       }
       else{
@@ -116,7 +122,12 @@ const BusDetailsScreen = () => {
         );
         if (!response.isError) {
           console.log('Bus data:', response.data);
-          setBusData(response.data);
+          let data=response.data;
+          data = converttotime(data);
+          data.stoppage.sort((a: any, b: any) => {
+            return a.time - b.time;
+          });
+          setBusData(data);
         }else{
           Toast.show({
             type: 'error',
@@ -137,7 +148,16 @@ const BusDetailsScreen = () => {
         setLoading(false);
       }
     };
-
+    const converttotime = (data:any) => {
+      const currentTime = new Date();
+      const currentMinutes = currentTime.getMinutes();
+      data.stoppage.forEach((stop: any) => {
+        if (stop.time < currentMinutes) {
+          stop.time += 60;
+        }
+      });
+      return data;
+    }
     if (selectedBusId) {
       fetchBusDetailsFromStorage(selectedBusId);
     }
@@ -267,12 +287,17 @@ const BusDetailsScreen = () => {
           <ScrollView>
           {busData?.stoppage && busData.stoppage.map((stop: any, index: number) => (
             <View key={index} style={styles.stopItem}>
-              <Text style={styles.stopName}>
-                Location: {stop?.location?.name ?? ''}
-              </Text>
+               {index==0 && <Text style={{color:`${COLOR.golden}`, fontSize:14}}>Next Expected Stoppage</Text>}
+              <View style={{display:'flex', flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+                <Text style={styles.stopName}>
+                  Location: {stop?.location?.name ?? ''}
+                  
+                </Text>
+                {index===0 && <Icon name="location" size={30} color={COLOR.golden} />}
+              </View>
               <Text style={styles.stopTime}>
-                Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour : 7}:
-                {stop?.time?.toString().padStart(2, '0') ?? ''}
+              Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour +Math.floor(stop.time/60): 7}
+              :{((stop?.time)%60).toString().padStart(2, '0') ?? ''}
               </Text>
             </View>
           ))}
