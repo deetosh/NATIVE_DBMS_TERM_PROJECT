@@ -219,7 +219,7 @@ const BusDetailsScreen = () => {
           id: loc._id,
           title: loc.name,
         }))}
-        selected={selectedLocationId}
+        selected={dest}
         setSelected={setDest}
         placeholder="Select Destination"
         containerStyle={{marginBottom: 10}}

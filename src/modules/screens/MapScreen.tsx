@@ -41,6 +41,13 @@ interface Location {
   coordinates: number[];
 }
 
+const initialRegionMap = {
+  latitude: 22.320336,
+  longitude: 87.309468,
+  latitudeDelta: 1,
+  longitudeDelta: 1,
+}
+
 const MapScreen: React.FC = () => {
   const [busLocations, setBusLocations] = useState<Record<string, BusLocation>>(
     {},
@@ -54,6 +61,7 @@ const MapScreen: React.FC = () => {
   const [selectedBus, setSelectedBus] = useState<any | null>(null);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
   const [seeLocation, setSeeLocation] = useState<boolean>(false);
+  const mapRef = useRef<MapView>(null);
 
   // Ask permission on Android
   const requestLocationPermission = async () => {
@@ -65,6 +73,23 @@ const MapScreen: React.FC = () => {
     }
     return true;
   };
+
+  const focusOnMap = () => {
+    mapRef.current?.animateCamera({
+      center: initialRegionMap,
+      zoom: 15,
+    }, {
+      duration: 3000,
+    })
+  }
+
+  useEffect(()=> {
+    if(mapRef.current){
+      setTimeout(() => {
+        focusOnMap();
+      }, 2000);
+    }
+  },[mapRef.current])
 
   useEffect(() => {
     // watch user location
@@ -113,7 +138,7 @@ const MapScreen: React.FC = () => {
     };
 
     initLocation();
-
+    // focusOnMap();
     const socket = io(`${BACKEND_URL}`); // Replace with your backend URL
 
     socket.on('connect', () => {
@@ -148,6 +173,9 @@ const MapScreen: React.FC = () => {
   }, []);
 
   const handleSheetOpen = (busId: string,busNumber: string) => {
+    if(!busId || !busNumber) {
+      return;
+    }
     console.log('sheet clicked');
     const bus = {
       bus_id: busId,
@@ -204,16 +232,13 @@ const MapScreen: React.FC = () => {
               ? {
                   latitude: userLocation.latitude,
                   longitude: userLocation.longitude,
-                  latitudeDelta: 0.02,
-                  longitudeDelta: 0.02,
+                  latitudeDelta: 1,
+                  longitudeDelta: 1,
                 }
-              : {
-                  latitude: 22.320336,
-                  longitude: 87.309468,
-                  latitudeDelta: 0.02,
-                  longitudeDelta: 0.02,
-                }
-          }>
+              : initialRegionMap    
+          }
+          ref= {mapRef}
+          >
           {Object.values(busLocations).map(bus => (
             <Marker
             key={bus.bus_id}

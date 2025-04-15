@@ -12,6 +12,7 @@ import {callAPI} from '../../services/callApi';
 import Toast from 'react-native-toast-message';
 import {COLOR} from '../../constants';
 import SearchableDropdown from '../../molecules/SearchableDropDown';
+import Loader from '../../molecules/Loader';
 
 interface Location {
   _id: string;
@@ -36,6 +37,7 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
   );
   const [arrivalTime, setArrivalTime] = useState<string>('');
   const [route, setRoute] = useState<Stop[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   // const dropdownRef = useRef<SearchableDropdownRef>(null);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
 
   const fetchLocations = async () => {
     try {
-      console.log;
+      setIsLoading(true);
       const res = await callAPI('/location/get', 'GET');
       console.log('locations', res);
       if (!res.isError && res.data) {
@@ -56,12 +58,14 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
           text2: res.message || 'Could not fetch locations.',
         });
       }
+      setIsLoading(false);
     } catch (err) {
       Toast.show({
         type: 'error',
         text1: 'Error',
         text2: 'Something went wrong while fetching locations.',
       });
+      setIsLoading(false);
     }
   };
 
@@ -148,6 +152,7 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
     };
 
     try {
+      setIsLoading(true);
       const res = await callAPI('/bus/add', 'POST', payload);
       if (!res.isError) {
         Toast.show({
@@ -165,6 +170,7 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
           text2: res.message || 'Could not add bus.',
         });
       }
+      setIsLoading(false);
     } catch (err) {
       console.error(err);
       Toast.show({
@@ -172,11 +178,13 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
         text1: 'Error',
         text2: 'Something went wrong while adding the bus.',
       });
+      setIsLoading(false);
     }
   };
 
   return (
     <View style={{flex: 1, backgroundColor: COLOR.bg_primary}}>
+      <Loader visible={isLoading} />
       <View
         style={{flex: 1, backgroundColor: COLOR.bg_primary, marginBottom: 100,padding:10}}>
         <View style={{display: 'flex',flexDirection: 'row',alignItems: 'center'}}>
@@ -210,22 +218,24 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
           value={busNo}
           onChangeText={setBusNo}
           placeholder="Enter Bus Number"
+          placeholderTextColor={COLOR.text_tertiary}
           style={{
             borderWidth: 1,
             borderColor: COLOR.bg_tertiary,
             padding: 10,
             borderRadius: 8,
-            marginBottom: 10,
+            marginBottom: 20,
+            color: COLOR.text_secondary,
+            fontSize: 16,
           }}
         />
 
         <Text
           style={{
-            marginTop: 10,
             color: COLOR.text_secondary,
-            marginBottom: 10,
+
           }}>
-          Select Location:
+          Select Next Stoppage:
         </Text>
         {/* <View
         style={{
@@ -254,13 +264,12 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
           }))}
           selected={selectedLocationId}
           setSelected={setSelectedLocationId}
-          placeholder="Select Bus"
+          placeholder="Select Location"
           containerStyle={{marginBottom: 10}}
         />
 
         <Text
           style={{
-            marginTop: 10,
             color: COLOR.text_secondary,
             marginBottom: 10,
           }}>
@@ -270,6 +279,7 @@ const AddBusScreen: React.FC<Prop> = ({handleClose}) => {
           value={arrivalTime}
           onChangeText={setArrivalTime}
           placeholder="e.g., 20"
+          placeholderTextColor={COLOR.text_tertiary}
           keyboardType="numeric"
           style={{
             borderWidth: 1,

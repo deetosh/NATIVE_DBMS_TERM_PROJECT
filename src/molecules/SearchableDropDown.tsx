@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   input: {
     paddingLeft: 10,
-    fontSize: 18,
+    fontSize: 16,
     color: COLOR.text_secondary
   },
   inputContainer: {

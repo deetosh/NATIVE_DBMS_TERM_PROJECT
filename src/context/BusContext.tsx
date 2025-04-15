@@ -97,7 +97,7 @@ export const BusProvider: React.FC<BusProviderProps> = ({ children }) => {
 
   const fetchAndStoreLocations = async () => {  
     try {
-      const response = await callAPI('/locations/getAll','GET');
+      const response = await callAPI('/location/get','GET');
       if (response.isError) {
         console.error('Error fetching bus data:', response.message);
         return;
