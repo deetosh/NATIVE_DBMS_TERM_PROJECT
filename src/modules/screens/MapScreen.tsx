@@ -320,6 +320,9 @@ const MapScreen: React.FC = () => {
         index={-1}
         snapPoints={useMemo(() => ['80%','100%'], [])}
         enablePanDownToClose={true}
+        onClose={() => {
+          setSelectedBus(null);
+        }}
         backgroundStyle={{
           backgroundColor: COLOR.bg_primary,
         }}

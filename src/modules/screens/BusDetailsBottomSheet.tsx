@@ -4,6 +4,7 @@ import { callAPI } from '../../services/callApi';
 import Loader from '../../molecules/Loader';
 import { COLOR } from '../../constants';
 import { BottomSheetFlatList, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import  Icon  from 'react-native-vector-icons/Ionicons';
 
 type Props = {
   busId: string | null;
@@ -22,7 +23,22 @@ export default function BusDetails({ busId, busNumber }: Props) {
       try {
         const response = await callAPI('/bus/getById', 'GET', {}, { busId });
         if (!response.isError) {
-          setBusData(response.data);
+          let data=response.data;
+          data = converttotime(data);
+          // sort the stoppages by time in ascending order by finding the current time and appending minutes to it and then sorting according to the current time which is closest first
+          // const currentTime = new Date();
+          // const currentMinutes = currentTime.getMinutes();
+          // const sortedStoppages = data.stoppage.sort((a: any, b: any) => {
+          //   const aTime = (a.time < currentMinutes)?a.time +60: a.time ;
+          //   const bTime = (b.time < currentMinutes)?b.time +60: b.time ;
+          //   return aTime - bTime;
+          // });
+          data.stoppage.sort((a: any, b: any) => {
+            return a.time - b.time;
+          });
+          setBusData(data);
+
+          // setBusData(response.data);
         }
       } catch (err) {
         console.error('Error fetching bus details:', err);
@@ -30,6 +46,16 @@ export default function BusDetails({ busId, busNumber }: Props) {
         setLoading(false);
       }
     };
+    const converttotime = (data:any) => {
+      const currentTime = new Date();
+      const currentMinutes = currentTime.getMinutes();
+      data.stoppage.forEach((stop: any) => {
+        if (stop.time < currentMinutes) {
+          stop.time += 60;
+        }
+      });
+      return data;
+    }
 
     fetchBusDetails();
   }, [busId]);
@@ -52,13 +78,18 @@ export default function BusDetails({ busId, busNumber }: Props) {
           <View style={styles.stoppageContainer}>
             <BottomSheetScrollView>
             {busData?.stoppage?.map((stop: any, index: number) => (
-              <View key={index} style={styles.stopItem}>
+              <View key={index} style={styles.stopItem} >
+                {index==0 && <Text style={{color:`${COLOR.golden}`, fontSize:14}}>Next Expected Stoppage</Text>}
+                <View style={{display:'flex', flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+                  <Text style={styles.stopText}>
+                    Location: {stop?.location?.name ?? ''}
+                    
+                  </Text>
+                  {index===0 && <Icon name="location" size={30} color={COLOR.golden} />}
+                </View>
                 <Text style={styles.stopText}>
-                  Location: {stop?.location?.name ?? ''}
-                </Text>
-                <Text style={styles.stopText}>
-                  Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour : 7}
-                  :{stop?.time?.toString().padStart(2, '0') ?? ''}
+                  Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour +Math.floor(stop.time/60): 7}
+                  :{((stop?.time)%60).toString().padStart(2, '0') ?? ''}
                 </Text>
               </View>
             ))}
