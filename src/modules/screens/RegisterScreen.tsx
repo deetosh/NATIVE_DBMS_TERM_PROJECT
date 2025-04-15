@@ -100,7 +100,7 @@ const RegisterScreen = ({ navigation }: any) => {
         <Picker.Item label="Select Role" value="" color="grey" style={styles.pickerLabel} /> 
         <Picker.Item label="User" value="user" style={styles.pickerLabel}/>
         <Picker.Item label="Driver" value="driver" style={styles.pickerLabel}/>
-        <Picker.Item label="Admin" value="admin" style={styles.pickerLabel}/>
+        {/* <Picker.Item label="Admin" value="admin" style={styles.pickerLabel}/> */}
       </Picker>
       </View>
 

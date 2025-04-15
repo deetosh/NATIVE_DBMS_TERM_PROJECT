@@ -15,6 +15,7 @@ import {COLOR, initialRegionMap} from '../../constants';
 import Toast from 'react-native-toast-message';
 import { callAPI } from '../../services/callApi';
 import Loader from '../../molecules/Loader';
+import SearchableDropdown from '../../molecules/SearchableDropDown';
 
 const {width} = Dimensions.get('window');
 
@@ -24,17 +25,20 @@ interface Coordinate {
 }
 
 interface Location {
+  _id: string;
   name: string;
   coordinates: number[];
 }
 
 const AddLocationScreen: React.FC = () => {
   const [isAdding, setIsAdding] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [placeName, setPlaceName] = useState<string>('');
   const [selectedCoordinate, setSelectedCoordinate] =
     useState<Coordinate | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
 
   const handleMapPress = (e: MapPressEvent) => {
     if (isAdding) {
@@ -58,12 +62,14 @@ const AddLocationScreen: React.FC = () => {
     }
 
     try {
+      setIsLoading(true);
       const response = await callAPI('/location/add',"POST",{
         name: placeName,
         coordinates: [selectedCoordinate.latitude,selectedCoordinate.longitude],
       });
-
-      if (!response.isError) {
+      setIsLoading(false);
+      if (!response.isError && response.data) {
+        setIsAdding(false);
         Toast.show({
           type: 'success',
           text1: 'Success',
@@ -72,16 +78,16 @@ const AddLocationScreen: React.FC = () => {
         setAllLocations((prevLocations) => [
           ...prevLocations,
           {
-            name: placeName,
+            name: response.data.name,
+            _id: response.data._id,
             coordinates: [
-              selectedCoordinate.latitude,
-              selectedCoordinate.longitude,
+              response.data.coordinates[0],
+              response.data.coordinates[1],
             ],
           },
         ]);
         setPlaceName('');
         setSelectedCoordinate(null);
-        setIsAdding(false);
       } else {
         Toast.show({
           type: 'error',
@@ -109,6 +115,49 @@ const AddLocationScreen: React.FC = () => {
     setPlaceName('');
     setSelectedCoordinate(null);
   };
+
+  const handleCancelDelete = () => {
+    setIsDeleting(false);
+  }
+
+  const handleDelete = async () => {
+
+    if(!selectedLocationId){
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please select a location to delete.',
+      });
+      return;
+    }
+    try {
+      const response = await callAPI(`/location/delete`, "DELETE",{},{id: selectedLocationId});
+      if (!response.isError) {
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Location deleted successfully.',
+        });
+        setAllLocations((prevLocations) =>
+          prevLocations.filter((loc) => loc._id !== selectedLocationId),
+        );
+        setSelectedLocationId(null);
+        setIsDeleting(false);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to delete location. Please try again.',
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to delete location. Please try again.',
+      });
+    }
+  }
 
   useEffect(()=> {
     const fetchLocations = async () => {
@@ -162,12 +211,19 @@ const AddLocationScreen: React.FC = () => {
           ))}
         </MapView>
 
-        {!isAdding && (
+        {!isAdding && !isDeleting && (
+          <View style={{display:'flex', flexDirection:'column',gap:10, justifyContent:'space-between', position:'absolute', bottom: 100, right: 30}}>
           <TouchableOpacity
             style={styles.plusButton}
             onPress={() => setIsAdding(true)}>
             <Icon name="add" size={30} color="#fff" />
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.plusButton}
+            onPress={() => setIsDeleting(true)}>
+            <Icon name="trash-bin" size={30} color="#fff" />
+          </TouchableOpacity>
+        </View>
         )}
 
         {isAdding && (
@@ -214,10 +270,38 @@ const AddLocationScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit}>
-                <Text style={styles.submitText}>Submit</Text>
+                <Text style={styles.submitText}>Add</Text>
               </TouchableOpacity>
             </View>
           </View>
+        )}
+
+        {isDeleting && (
+          <View style={styles.inputContainer}>
+            <SearchableDropdown
+              data={allLocations.map(loc => ({
+                id: loc._id,
+                title: loc.name,
+              }))}
+              selected={selectedLocationId}
+              setSelected={setSelectedLocationId}
+              placeholder="Select Destination"
+              containerStyle={{marginBottom: 10}}
+            />
+          <View
+            style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancelDelete}>
+              <Text style={styles.submitText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleDelete}>
+              <Text style={styles.submitText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         )}
       </View>
     </SafeAreaView>
@@ -234,9 +318,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   plusButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 30,
+    // position: 'absolute',
+    // bottom: 100,
+    // right: 30,
     backgroundColor: COLOR.bg_primary,
     borderRadius: 30,
     width: 60,
