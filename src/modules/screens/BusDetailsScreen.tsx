@@ -21,7 +21,7 @@ const BusDetailsScreen = () => {
   const [dest, setDest] = useState<string | null>(null); // Replace with actual destination fetching logic
   const [allLocations, setAllLocations] = useState<any[]>([]); // Replace with actual locations fetching logic
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null); // Replace with actual location ID fetching logic
-  const currentHour = new Date().getHours();
+  let currentHour = new Date().getHours();
 
   const {getAllBusesFromStorage,getBusDetailsFromStorage,getAllLocationsFromStorage,getAllBusesMatchingLocationFromStorage} = useBusContext();
   // useEffect(() => {
@@ -93,6 +93,7 @@ const BusDetailsScreen = () => {
   }, []);
 
   useEffect(() => {
+    currentHour = new Date().getHours();
     const fetchBusDetailsFromStorage = async (busId: string) => {
       setLoading(true);
       const busDetails = await getBusDetailsFromStorage(busId);

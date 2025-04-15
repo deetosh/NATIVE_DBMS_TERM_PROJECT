@@ -14,9 +14,10 @@ type Props = {
 export default function BusDetails({ busId, busNumber }: Props) {
   const [busData, setBusData] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
-  const currentHour = new Date().getHours();
+  let currentHour = new Date().getHours();
 
   useEffect(() => {
+    currentHour = new Date().getHours();
     const fetchBusDetails = async () => {
       if (!busId) return;
       setLoading(true);
