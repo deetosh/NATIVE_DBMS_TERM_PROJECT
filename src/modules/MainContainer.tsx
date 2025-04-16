@@ -17,6 +17,7 @@ import AssignDriverScreen from './screens/AssignDriverScreen';
 import AdminBusManageScreen from './screens/AdminBusScreen';
 import { withBusProvider } from '../context/ProviderWrapper';
 import BusDestinationScreen from './screens/BusDestinationScreen';
+import { BusProvider } from '../context/BusContext';
 
 // Screen name
 const HOME_SCREEN = 'Drive';
@@ -138,12 +139,14 @@ const MainContainer = () => {
           })}>
           {role === 'user' && (
             <>
+              {/* <BusProvider> */}
               <Tab.Screen
                 name={BUS_DETAILS_SCREEN}
                 component={withBusProvider(BusDetailsScreen)}
               />
-              <Tab.Screen name={MAP_SCREEN} component={MapScreen} />
+              <Tab.Screen name={MAP_SCREEN} component={withBusProvider(MapScreen)} />
               <Tab.Screen name={DESTINATION_SCREEN} component={withBusProvider(BusDestinationScreen)}/>
+              {/* </BusProvider> */}
             </>
           )}
           {role === 'admin' && (

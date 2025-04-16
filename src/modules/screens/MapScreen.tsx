@@ -200,6 +200,9 @@ const MapScreen: React.FC = () => {
       // sheetRef.current?.expand();
         sheetRef.current?.snapToIndex(0);
     }
+    else{
+      sheetRef.current?.close();
+    }
   },[selectedBus])
 
   useEffect(()=> {
@@ -352,9 +355,9 @@ const MapScreen: React.FC = () => {
         enableDynamicSizing={false}
       >
         <BottomSheetView style={{height: '100%'}} >
-          <BusProvider>
+          {/* <BusProvider> */}
             <BusDetailsSheet busId={selectedBus?.bus_id} busNumber={selectedBus?.bus_no}/>
-          </BusProvider>
+          {/* </BusProvider> */}
         </BottomSheetView>
       </BottomSheet>
     </GestureHandlerRootView>

@@ -128,6 +128,9 @@ const BusDestinationScreen = () => {
       // sheetRef.current?.expand();
       sheetRef.current?.snapToIndex(0);
     }
+    else{
+      sheetRef.current?.close();
+    }
   }, [selectedBus]);
 
   const handleSheetOpen = (busId: string, busNumber: string) => {
@@ -246,12 +249,12 @@ const BusDestinationScreen = () => {
               )}
               enableDynamicSizing={false}>
               <BottomSheetView style={{height: '100%'}}>
-                <BusProvider>
+                {/* <BusProvider> */}
                   <BusDetailsSheet
                     busId={selectedBus?.bus_id || null}
                     busNumber={selectedBus?.bus_no || null}
                   />
-                </BusProvider>
+                {/* </BusProvider> */}
               </BottomSheetView>
             </BottomSheet>
           </View>
