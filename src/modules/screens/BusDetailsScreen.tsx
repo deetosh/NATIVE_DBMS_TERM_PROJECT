@@ -17,10 +17,10 @@ const BusDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null); // Replace with actual bus ID fetching logic
   const [allBuses, setAllBuses] = useState<any[]>([]); // Replace with actual bus data fetching logic
-  const [tempBus, setTempBus] = useState<any[]>([]); // Replace with actual bus data fetching logic
-  const [dest, setDest] = useState<string | null>(null); // Replace with actual destination fetching logic
-  const [allLocations, setAllLocations] = useState<any[]>([]); // Replace with actual locations fetching logic
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null); // Replace with actual location ID fetching logic
+  // const [tempBus, setTempBus] = useState<any[]>([]); // Replace with actual bus data fetching logic
+  // const [dest, setDest] = useState<string | null>(null); // Replace with actual destination fetching logic
+  // const [allLocations, setAllLocations] = useState<any[]>([]); // Replace with actual locations fetching logic
+  // const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null); // Replace with actual location ID fetching logic
   let currentHour = new Date().getHours();
 
   const {getAllBusesFromStorage,getBusDetailsFromStorage,getAllLocationsFromStorage,getAllBusesMatchingLocationFromStorage} = useBusContext();
@@ -47,11 +47,10 @@ const BusDetailsScreen = () => {
     const fetchFromStorage = async () => {
       setLoading(true);
       const buses = await getAllBusesFromStorage();
-      const locations = await getAllLocationsFromStorage();
-      if (buses && locations) {
+      // const locations = await getAllLocationsFromStorage();
+      if (buses) {
         setAllBuses(buses);
-        setTempBus(buses);
-        setAllLocations(locations);
+        // setAllLocations(locations);
         console.log('***** Fetched buses from storage:', buses);
         setLoading(false);
       }else{
@@ -63,13 +62,10 @@ const BusDetailsScreen = () => {
       try {
         setLoading(true);
         const response = await callAPI(`/bus/get`, 'GET', {}, {});
-        const locResponse = await callAPI(`/location/get`, 'GET', {}, {});
-        if (!response.isError && !locResponse.isError) {
-          console.log('Locations data:', locResponse.data);
+        // const locResponse = await callAPI(`/location/get`, 'GET', {}, {});
+        if (!response.isError) {
           console.log('Bus data:', response.data);
           setAllBuses(response.data);
-          setTempBus(response.data);
-          setAllLocations(locResponse.data);
         }
         else{
           Toast.show({
@@ -164,47 +160,47 @@ const BusDetailsScreen = () => {
     }
   }, [selectedBusId]);
   
-  useEffect(() => {
-    const filterBusesByDestinationFromStorage = async (destination:string) => {
-      setLoading(true);
-      const buses = await getAllBusesMatchingLocationFromStorage(destination);
-      if (buses) {
-        // setTempBus(buses);
-        setAllBuses(buses);
-        console.log('***** Fetched buses from storage:', buses);
-        // filterBusesByDestination();
-      }
-      else{
-        filterBusesByDestination();
-      }
-      setLoading(false);
-    }
+  // useEffect(() => {
+  //   const filterBusesByDestinationFromStorage = async (destination:string) => {
+  //     setLoading(true);
+  //     const buses = await getAllBusesMatchingLocationFromStorage(destination);
+  //     if (buses) {
+  //       // setTempBus(buses);
+  //       setAllBuses(buses);
+  //       console.log('***** Fetched buses from storage:', buses);
+  //       // filterBusesByDestination();
+  //     }
+  //     else{
+  //       filterBusesByDestination();
+  //     }
+  //     setLoading(false);
+  //   }
 
-    const filterBusesByDestination = async () => {
-      setLoading(true);
-      if (dest) {
-        const filteredBuses= await callAPI(`/bus/getByDestination`, 'GET', {}, {destination: dest});
-        setAllBuses(filteredBuses.data);
-      } else {
-        setAllBuses(tempBus);
-      }
-      setLoading(false);
-    };
-    if(dest){
-      filterBusesByDestinationFromStorage(dest);
-      setBusData(null);
-      setSelectedBusId(null);
-    }else{
-      setAllBuses(tempBus);
-      setBusData(null);
-      setSelectedBusId(null);
-    }
-  }, [dest]);
+  //   const filterBusesByDestination = async () => {
+  //     setLoading(true);
+  //     if (dest) {
+  //       const filteredBuses= await callAPI(`/bus/getByDestination`, 'GET', {}, {destination: dest});
+  //       setAllBuses(filteredBuses.data);
+  //     } else {
+  //       setAllBuses(tempBus);
+  //     }
+  //     setLoading(false);
+  //   };
+  //   if(dest){
+  //     filterBusesByDestinationFromStorage(dest);
+  //     setBusData(null);
+  //     setSelectedBusId(null);
+  //   }else{
+  //     setAllBuses(tempBus);
+  //     setBusData(null);
+  //     setSelectedBusId(null);
+  //   }
+  // }, [dest]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bus Details</Text>
-      <Text style={{color: COLOR.text_tertiary,textAlign:'center',fontSize:16,marginBottom:10}}>* Buses run from 7AM to 6PM</Text>
+      <Text style={{color: COLOR.text_tertiary,textAlign:'center',fontSize:16,marginBottom:10}}>* Buses repeat every hour from 7AM to 6PM</Text>
       <Loader visible={loading} />
       {/* <View style={styles.pickerContainer}>
         <Ionicons
@@ -235,7 +231,7 @@ const BusDetailsScreen = () => {
           ))}
         </Picker>
       </View> */}
-      <SearchableDropdown
+      {/* <SearchableDropdown
         data={allLocations.map(loc => ({
           id: loc._id,
           title: loc.name,
@@ -244,7 +240,7 @@ const BusDetailsScreen = () => {
         setSelected={setDest}
         placeholder="Select Destination"
         containerStyle={{marginBottom: 10}}
-      />
+      /> */}
       <SearchableDropdown
         data={allBuses.map(bus => ({
           id: bus._id,
@@ -297,7 +293,7 @@ const BusDetailsScreen = () => {
                 {index===0 && <Icon name="location" size={30} color={COLOR.golden} />}
               </View>
               <Text style={styles.stopTime}>
-              Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour +Math.floor(stop.time/60): 7}
+              Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour +Math.floor(stop.time/60): 7+Math.floor(stop.time/60)}
               :{((stop?.time)%60).toString().padStart(2, '0') ?? ''}
               </Text>
             </View>

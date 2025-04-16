@@ -5,6 +5,7 @@ import Loader from '../../molecules/Loader';
 import { COLOR } from '../../constants';
 import { BottomSheetFlatList, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import  Icon  from 'react-native-vector-icons/Ionicons';
+import { useBusContext } from '../../context/BusContext';
 
 type Props = {
   busId: string | null;
@@ -15,9 +16,30 @@ export default function BusDetails({ busId, busNumber }: Props) {
   const [busData, setBusData] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   let currentHour = new Date().getHours();
+  const {getBusDetailsFromStorage} = useBusContext();
 
   useEffect(() => {
     currentHour = new Date().getHours();
+
+    const fetchBusDetailsFromStorage = async () => {
+      if(!busId) return;
+      setLoading(true);
+      const busDetails = await getBusDetailsFromStorage(busId);
+      if (busDetails) {
+        console.log('***** Fetched bus details from storage:', busDetails);
+        let data=busDetails;
+        data = converttotime(data);
+        data.stoppage.sort((a: any, b: any) => {
+          return a.time - b.time;
+        });
+        setBusData(data);
+        setLoading(false);
+      }
+      else{
+        fetchBusDetails();
+      }
+    };
+
     const fetchBusDetails = async () => {
       if (!busId) return;
       setLoading(true);
@@ -57,8 +79,9 @@ export default function BusDetails({ busId, busNumber }: Props) {
       });
       return data;
     }
-
-    fetchBusDetails();
+    if(busId){
+      fetchBusDetailsFromStorage();
+    }
   }, [busId]);
 
   return (
@@ -89,7 +112,7 @@ export default function BusDetails({ busId, busNumber }: Props) {
                   {index===0 && <Icon name="location" size={30} color={COLOR.golden} />}
                 </View>
                 <Text style={styles.stopText}>
-                  Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour +Math.floor(stop.time/60): 7}
+                  Arrival Time: {currentHour >= 7 && currentHour <= 18 ? currentHour +Math.floor(stop.time/60): 7+Math.floor(stop.time/60)}
                   :{((stop?.time)%60).toString().padStart(2, '0') ?? ''}
                 </Text>
               </View>

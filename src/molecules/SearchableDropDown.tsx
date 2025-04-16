@@ -15,6 +15,7 @@ interface Props {
   selected?: string | null;
   placeholder?: string;
   containerStyle?: ViewStyle;
+  setTitle?: (item: string | null) => void;
 }
 
 const SearchableDropdown: React.FC<Props> = ({
@@ -23,11 +24,13 @@ const SearchableDropdown: React.FC<Props> = ({
   selected,
   placeholder = 'Search...',
   containerStyle,
+  setTitle,
 }) => {
   const autoCompleteRef = useRef<any>(null);
   const handleSelect = (item: DropdownItem | null) => {
     if (item) {
       setSelected(item.id);
+      if(setTitle)setTitle(item.title || null);
     }
   };
 

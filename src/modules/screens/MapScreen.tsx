@@ -23,6 +23,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/botto
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faBus } from '@fortawesome/free-solid-svg-icons';
 import { callAPI } from '../../services/callApi';
+import { BusProvider } from '../../context/BusContext';
 
 type BusLocation = {
   bus_id: string;
@@ -139,37 +140,45 @@ const MapScreen: React.FC = () => {
 
     initLocation();
     // focusOnMap();
-    const socket = io(`${BACKEND_URL}`); // Replace with your backend URL
-
-    socket.on('connect', () => {
-      console.log('Connected to socket server');
-    });
-
-    socket.on('bus:locationUpdate', (data: BusLocation) => {
-      setBusLocations(prev => ({
-        ...prev,
-        [data.bus_id]: data, // Update each bus by its unique ID
-      }));
-    });
-
-    socket.on('bus:stopped',(bus_id:string)=> {
-      
-      const filteredList: Record<string,BusLocation> = {}
-      for (const key in busLocations) {
-        if (key != bus_id) {
-          filteredList[key] = busLocations[key];
+    try {
+      const socket = io(`${BACKEND_URL}`); // Replace with your backend URL
+  
+      socket.on('connect', () => {
+        console.log('Connected to socket server');
+      });
+  
+      socket.on('bus:locationUpdate', (data: BusLocation) => {
+        setBusLocations(prev => ({
+          ...prev,
+          [data.bus_id]: data, // Update each bus by its unique ID
+        }));
+      });
+  
+      socket.on('bus:stopped',(bus_id:string)=> {
+        
+        const filteredList: Record<string,BusLocation> = {}
+        for (const key in busLocations) {
+          if (key != bus_id) {
+            filteredList[key] = busLocations[key];
+          }
         }
-      }
-      setBusLocations(filteredList);
-    })
-
-    socket.on('disconnect', () => {
-      console.log('Disconnected from socket server');
-    });
-
-    return () => {
-      socket.disconnect();
-    };
+        setBusLocations(filteredList);
+      })
+  
+      socket.on('disconnect', () => {
+        console.log('Disconnected from socket server');
+      });
+  
+      return () => {
+        socket.disconnect();
+      };
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to fetch live buses',
+        text2: 'Please make sure you have a stable Internet Connection.',
+      });
+    }
   }, []);
 
   const handleSheetOpen = (busId: string,busNumber: string) => {
@@ -204,7 +213,7 @@ const MapScreen: React.FC = () => {
             Toast.show({
               type: 'error',
               text1: 'Error',
-              text2: 'Failed to fetch locations. Please try again.',
+              text2: 'Please make sure you have a stable Internet Connection.',
             });
           }
           setIsLoading(false);
@@ -213,7 +222,7 @@ const MapScreen: React.FC = () => {
           Toast.show({
             type: 'error',
             text1: 'Error',
-            text2: 'Failed to fetch locations. Please try again.',
+            text2: 'Please make sure you have a stable Internet Connection.',
           });
         }
       };
@@ -343,7 +352,9 @@ const MapScreen: React.FC = () => {
         enableDynamicSizing={false}
       >
         <BottomSheetView style={{height: '100%'}} >
-          <BusDetailsSheet busId={selectedBus?.bus_id} busNumber={selectedBus?.bus_no}/>
+          <BusProvider>
+            <BusDetailsSheet busId={selectedBus?.bus_id} busNumber={selectedBus?.bus_no}/>
+          </BusProvider>
         </BottomSheetView>
       </BottomSheet>
     </GestureHandlerRootView>

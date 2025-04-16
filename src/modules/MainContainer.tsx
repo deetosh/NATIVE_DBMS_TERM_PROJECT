@@ -16,6 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import AssignDriverScreen from './screens/AssignDriverScreen';
 import AdminBusManageScreen from './screens/AdminBusScreen';
 import { withBusProvider } from '../context/ProviderWrapper';
+import BusDestinationScreen from './screens/BusDestinationScreen';
 
 // Screen name
 const HOME_SCREEN = 'Drive';
@@ -25,6 +26,7 @@ const LOCATION_SCREEN = 'Location';
 const BUSES_SCREEN = 'Buses';
 const PROFILE_SCREEN = 'Profile';
 const ASSIGN_DRIVER_SCREEN = 'Driver';
+const DESTINATION_SCREEN = 'Reach Fast';
 
 const Tab = createBottomTabNavigator();
 
@@ -84,6 +86,9 @@ const MainContainer = () => {
                 case ASSIGN_DRIVER_SCREEN:
                   iconName = focused ? 'man' : 'man-outline';
                   break;
+                case DESTINATION_SCREEN:
+                  iconName = focused ? 'navigate' : 'navigate-outline';
+                  break;
               }
               return (
                 <Ionicons
@@ -138,6 +143,7 @@ const MainContainer = () => {
                 component={withBusProvider(BusDetailsScreen)}
               />
               <Tab.Screen name={MAP_SCREEN} component={MapScreen} />
+              <Tab.Screen name={DESTINATION_SCREEN} component={withBusProvider(BusDestinationScreen)}/>
             </>
           )}
           {role === 'admin' && (

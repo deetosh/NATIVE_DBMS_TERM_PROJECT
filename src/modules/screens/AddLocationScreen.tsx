@@ -131,6 +131,7 @@ const AddLocationScreen: React.FC = () => {
       return;
     }
     try {
+      setIsLoading(true);
       const response = await callAPI(`/location/delete`, "DELETE",{},{id: selectedLocationId});
       if (!response.isError) {
         Toast.show({
@@ -149,6 +150,7 @@ const AddLocationScreen: React.FC = () => {
           text1: 'Error',
           text2: 'Failed to delete location. Please try again.',
         });
+        setIsLoading(false);
       }
     } catch (error) {
       Toast.show({
@@ -156,6 +158,7 @@ const AddLocationScreen: React.FC = () => {
         text1: 'Error',
         text2: 'Failed to delete location. Please try again.',
       });
+      setIsLoading(false);
     }
   }
 
