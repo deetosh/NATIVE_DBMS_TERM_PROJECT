@@ -176,7 +176,7 @@ const BusDestinationScreen = () => {
               containerStyle={{marginBottom: 20}}
               setTitle={setDestName}
             />
-            <ScrollView>
+            <ScrollView style={{marginBottom:100}}>
             {busData &&
               start &&
               dest &&
