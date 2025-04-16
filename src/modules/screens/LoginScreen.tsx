@@ -80,20 +80,21 @@ const LoginScreen = ({navigation}: any) => {
     console.log('API Response:', response);
      
     if (!response.isError) {
-      Toast.show({
-        type: 'success',
-        text1: 'Login Successful',
-        text2: response.message,
-      });
+      
       // store access token in local storage
       AsyncStorage.setItem('accessToken', response.data.access_token);
       AsyncStorage.setItem('role', response.data.user.role);
       AsyncStorage.setItem('name', response.data.user.username);
       AsyncStorage.setItem('email', response.data.user.email);
       setIsLoading(false);
-      navigation.replace('Main');
+      Toast.show({
+        type: 'success',
+        text1: 'Login Successful',
+        text2: response.message,
+      });
       setEmail('');
       setPassword('');
+      navigation.replace('Main');
     } else {
       Toast.show({
         type: "error",

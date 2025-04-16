@@ -53,39 +53,24 @@ const MainContainer = () => {
     <View style={{flex: 1, backgroundColor: COLOR.bg_primary}}>
       {/* <Loader visible={loading} /> */}
       {/* <NavigationContainer> */}
-      {role && (
+      {role && role=='user' && (
+        <BusProvider>
         <Tab.Navigator
           initialRouteName={
-            role === 'user'
-              ? BUS_DETAILS_SCREEN
-              : role === 'admin'
-              ? LOCATION_SCREEN
-              : HOME_SCREEN
+            BUS_DETAILS_SCREEN
           }
           screenOptions={({route}) => ({
             tabBarIcon: ({focused, color, size}) => {
               let iconName: any;
               switch (route.name) {
-                case HOME_SCREEN:
-                  iconName = focused ? 'home' : 'home-outline';
-                  break;
                 case BUS_DETAILS_SCREEN:
                   iconName = focused ? 'bus' : 'bus-outline';
                   break;
                 case MAP_SCREEN:
                   iconName = focused ? 'map' : 'map-outline';
                   break;
-                case LOCATION_SCREEN:
-                  iconName = focused ? 'location' : 'location-outline';
-                  break;
-                case BUSES_SCREEN:
-                  iconName = focused ? 'bus' : 'bus-outline';
-                  break;
                 case PROFILE_SCREEN:
                   iconName = focused ? 'person' : 'person-outline';
-                  break;
-                case ASSIGN_DRIVER_SCREEN:
-                  iconName = focused ? 'man' : 'man-outline';
                   break;
                 case DESTINATION_SCREEN:
                   iconName = focused ? 'navigate' : 'navigate-outline';
@@ -99,7 +84,8 @@ const MainContainer = () => {
                 />
               );
             },
-            
+            unMountOnBlur: false,
+            lazy: true,          
 
             tabBarActiveTintColor: COLOR.bg_primary,
             tabBarActiveBackgroundColor: COLOR.my_color,
@@ -142,13 +128,91 @@ const MainContainer = () => {
               {/* <BusProvider> */}
               <Tab.Screen
                 name={BUS_DETAILS_SCREEN}
-                component={withBusProvider(BusDetailsScreen)}
+                component={BusDetailsScreen}
               />
-              <Tab.Screen name={MAP_SCREEN} component={withBusProvider(MapScreen)} />
-              <Tab.Screen name={DESTINATION_SCREEN} component={withBusProvider(BusDestinationScreen)}/>
+              <Tab.Screen name={MAP_SCREEN} component={MapScreen} />
+              <Tab.Screen name={DESTINATION_SCREEN} component={BusDestinationScreen}/>
               {/* </BusProvider> */}
             </>
           )}
+          <Tab.Screen name={PROFILE_SCREEN} component={ProfileScreen} />
+        </Tab.Navigator>
+        </BusProvider>
+      )}
+      {role &&  role!='user' &&(
+        <Tab.Navigator
+          initialRouteName={
+          role === 'admin'
+              ? LOCATION_SCREEN
+              : HOME_SCREEN
+          }
+          screenOptions={({route}) => ({
+            tabBarIcon: ({focused, color, size}) => {
+              let iconName: any;
+              switch (route.name) {
+                case HOME_SCREEN:
+                  iconName = focused ? 'home' : 'home-outline';
+                  break;
+                case LOCATION_SCREEN:
+                  iconName = focused ? 'location' : 'location-outline';
+                  break;
+                case BUSES_SCREEN:
+                  iconName = focused ? 'bus' : 'bus-outline';
+                  break;
+                case PROFILE_SCREEN:
+                  iconName = focused ? 'person' : 'person-outline';
+                  break;
+                case ASSIGN_DRIVER_SCREEN:
+                  iconName = focused ? 'man' : 'man-outline';
+                  break;
+              }
+              return (
+                <Ionicons
+                  name={iconName}
+                  size={30}
+                  color={color}
+                />
+              );
+            },
+            unMountOnBlur: false,
+            lazy: true,          
+
+            tabBarActiveTintColor: COLOR.bg_primary,
+            tabBarActiveBackgroundColor: COLOR.my_color,
+            tabBarInactiveTintColor: COLOR.bg_secondary,
+            tabBarLabelStyle: {paddingBottom: 10, fontSize: 10, paddingTop: 8},
+            tabBarStyle: {
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              elevation: 0,
+              backgroundColor: COLOR.text_tertiary,
+              height: 60 + insets.bottom,
+              marginHorizontal: 25,
+              // marginVertical: 20,
+              borderWidth: 1,
+              borderRadius: 30,
+              borderColor: COLOR.bg_primary,
+              // height: 60,
+            },
+            tabBarHideOnKeyboard: true,
+            headerShown: false,
+            headerStyle: {
+              backgroundColor: COLOR.bg_secondary,
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+              height: 50,
+            },
+            headerTintColor: COLOR.text_primary,
+            headerTitleStyle: {
+              fontSize: 20,
+              fontWeight: 'bold',
+              height: 30,
+            },
+            headerTitleAlign: 'center',
+          })}>
           {role === 'admin' && (
             <>
               <Tab.Screen
