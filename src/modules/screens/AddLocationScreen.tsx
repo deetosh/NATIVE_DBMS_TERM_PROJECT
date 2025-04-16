@@ -144,6 +144,7 @@ const AddLocationScreen: React.FC = () => {
         );
         setSelectedLocationId(null);
         setIsDeleting(false);
+        setIsLoading(false);
       } else {
         Toast.show({
           type: 'error',
